@@ -1,9 +1,4 @@
-from gpiozero import LED
+import robot as ur
 import time
+#from gpiozero import OutputDevice
 
-led = LED(2)
-
-while True:
-    time.sleep(1)
-    led.toggle()
-    
