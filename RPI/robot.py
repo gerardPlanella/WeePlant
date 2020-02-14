@@ -1,9 +1,9 @@
-import robot_vision as rvis
 import com_URScript as script
-import cv2
 import socket
 import time
 import math as m
+
+DEBUG = False
 
 ROBOT_STATUS_BITS = "robot_status_bits"
 ROBOT_JOINT_POSITIONS = "get_all_joint_positions"
@@ -25,25 +25,25 @@ class UR():
 			"swipe acquisition 1": [-110.23,-122.89,119.76,-73.48,10.25,219.37],
 			"swipe acquisition 2": [-173.3,-57.6,82,-111,-12,204],#-167.96,-94.8,118.5,-104.96,-12.54,204],#-158.22,-62.42,105.28,-111.47,-7,211.48],
 			"before any acquisition": [-109.15,-109.24,110,-1,79,185], #pinca oberta
-			"before acquisition bottle 1": [-85.97,-78.43,146.7,-68.91,96.2,179.95], #pinca oberta
-			"before acquisition bottle 2": [-127.43,-74.4,140,-66.3,54.75,180.6],
-			"before acquisition bottle 3": [-153.76,-71,134.11,-64.55,28.43,181.63],
-			"acquisition bottle 1":[-87.37,-61.53,116.01,-55.12,94.81,180], #tancar pincaS
-			"acquisition bottle 2":[-112.53,-55.35,103.9,-49.24,69.67,180.36],
-			"acquisition bottle 3":[-130.66,-52.55,98.48,-46.9,51.55,180.77],
+			"before acquisition bottle 1": [-85.99,-91.15,142.61,-52.1,96.2,179.95], #pinca oberta
+			"before acquisition bottle 2": [-127.45,-87.98,135.05,-47.75,54.75,180.6],
+			"before acquisition bottle 3": [-153.77,-81.65,130,-50,28.43,181.63],
+			"acquisition bottle 1":[-87.35,-51.99,117,-65.68,94.8,180], #pinca oberta
+			"acquisition bottle 2":[-112.5,-47.35,104.85,-58.2,69.7,180],
+			"acquisition bottle 3": [-129,-46,100.8,-56,53.25,180],
 			"before delivery" : [-145.56, -40.21, 75.39, -35.91, 127.19, 179.55], #pinca tancada
-			"after delivery" :[-152.17, -23.64, 40.91, -17.92, 120.61, 179.70] #obrim pinca
+			"after delivery" :[-152.17, -19.57, 41.93, -23.01, 120.6, 179.7], #obrim pinca
+			"removal point" : [-152.17,-16.72,41.61,-25.55,120.6,180]
 			}
 
-
 	def FreeMode(self):
+		global DEBUG
+		if DEBUG: return
 		script.freedrive_mode(self.address)
 
-	def anyoneInCamera(self):
-		return rvis.anyoneInCamera();
-
-
 	def NotFreeMode(self):
+		global DEBUG
+		if DEBUG: return
 		script.end_freedrive_mode(self.address)
 
 	def getAddress(self):
@@ -59,6 +59,8 @@ class UR():
 		sock.close()
 
 	def moveJoints(self, position_name, a, v):
+		global DEBUG
+		if DEBUG: return
 		joint_angles = self.positions[position_name]
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect((self.address, self.port_Data))
@@ -81,6 +83,8 @@ class UR():
 
 
 	def moveLJoints(self, position_name, a, v):
+		global DEBUG
+		if DEBUG: return
 		joint_angles = self.positions[position_name]
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.connect((self.address, self.port_Data))
@@ -102,63 +106,11 @@ class UR():
 		sock.close()
 
 	def operateGripper(self, open = True):
+		global DEBUG
+		if DEBUG: return
 		GRIPPER_PIN = 1
 		if open is True:
 			script.open_gripper(self.address, GRIPPER_PIN)
 		else:
 			script.close_gripper(self.address, GRIPPER_PIN)
-
-
-
-	def face_detect(self, threshold):
-		"""
-		Function that waits to detect a face
-
-		Args:
-			threshold(int) number that dictates how many frames a face should be detected before the function ends
-		Returns:
-			recon_result(name str, face image)
-
-		"""
-		recon_result =  rvis.recognize_face(threshold)
-		if recon_result[0] == UNKNOWN_HUMAN:
-			cv2.imwrite("faces/tmp.jpg", recon_result[1])
-		else:
-			cv2.imwrite("faces/" + recon_result[0] + ".jpg", recon_result[1])
-
-
-		return recon_result[0]
-
-	def emotional_wait(self, emotion, threshold):
-		if rvis.waitForEmotion(emotion, threshold) < 0:
-			print("Error emotion param")
-		else:
-			print(emotion + " state achieved")
-
-	def gesture_detect(self, gesture_type, threshold):
-		rvis.recognize_gesture(gesture_type, threshold)
-		print("Gesture with " + str(gesture_type) + "fingers recognized")
-"""
-if __name__ == "__main__":
-	robot = UR("192.168.1.104")
-	robot.NotFreeMode()
-	#robot.FreeMode()
-
-	robot.moveJoints("Salute 2", 0.5, 0.5)
-	a = 0
-	while a < 2:
-		a = a + 1
-		robot.moveJoints("swipe acquisition 1", 0.5, 0.5)
-		robot.moveJoints("swipe acquisition 2", 0.5, 0.5)
-	#robot.moveJoints("before acquisition bottle 1", 0.5, 0.5)
-
-
-	robot.moveJoints("before delivery", 0.5, 0.5)
-	robot.moveLJoints("delivery point", 0.5, 0.5)
-	robot.moveJoints("after delivery", 0.5, 0.5)
-
-	robot.moveJoints("swipe acquisition 2", 0.5, 0.5)
-	robot.moveJoints("before any acquisition", 0.5, 0.5)
-	robot.moveJoints("before acquisition bottle 3", 0.5, 0.5)
-	robot.moveLJoints("acquisition bottle 3", 0.5, 0.5)
-"""
+		time.sleep(1)
