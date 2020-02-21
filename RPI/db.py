@@ -39,7 +39,14 @@ class WeePlantDB():
                             PRIMARY KEY (plant_ID));""", vars=None)
 
         cursor.execute('DROP TABLE IF EXISTS Imatge CASCADE;', vars=None)
-        cursor.execute('CREATE TABLE Imatge (time TIMESTAMP, plant_ID INT, image BYTEA, height REAL, colour SMALLINT[], PRIMARY KEY (time, plant_ID), FOREIGN KEY (plant_ID) REFERENCES Plant(plant_ID) );', vars=None)
+        cursor.execute("""CREATE TABLE Imatge (
+                            time TIMESTAMP,
+                            plant_ID INT,
+                            image BYTEA,
+                            height REAL,
+                            colour SMALLINT[],
+                            PRIMARY KEY (time, plant_ID),
+                            FOREIGN KEY (plant_ID) REFERENCES Plant(plant_ID) );""", vars=None)
 
         cursor.execute('DROP TABLE IF EXISTS Humidity CASCADE;', vars=None)
         cursor.execute('CREATE TABLE Humidity ( time TIMESTAMP, plant_ID INT, value REAL, PRIMARY KEY (time, plant_ID), FOREIGN KEY (plant_ID) REFERENCES Plant(plant_ID));', vars=None)
@@ -93,9 +100,7 @@ class WeePlantDB():
         cursor.execute('SELECT * FROM plant WHERE plant_ID = ' + str(id) + ';', vars=None)
 
         resultat = {}
-
         for row in cursor:
-            print(list(row))
             resultat = {
                 "plant_ID": row[0],
                 "name": row[1],
@@ -107,12 +112,54 @@ class WeePlantDB():
 
         return resultat
 
+    def getHumidityLog(self, id):
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT *
+                            FROM humidity h
+                            INNER JOIN plant p ON p.plant_ID = h.plant_ID
+                            WHERE h.plant_ID = """ + str(id) + """
+                            ORDER BY time ASC;""", vars=None)
+
+        resultat = []
+        for row in cursor:
+            mostra = {
+                "time": row[0],
+                "plant_ID": row[1],
+                "image": row[2],
+                "height": row[3],
+                "colou": row[4]
+                }
+            resultat.append(mostra)
+
+        return resultat
+
+    def getHumidityLast(self, id):
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT *
+                            FROM humidity h
+                            INNER JOIN plant p ON p.plant_ID = h.plant_ID
+                            WHERE h.plant_ID = """ + str(id) + """
+                            ORDER BY time DESC
+                            LIMIT 1;""", vars=None)
+
+        resultat = {}
+        for row in cursor:
+            resultat = {
+                "time": row[0],
+                "plant_ID": row[1],
+                "image": row[2],
+                "height": row[3],
+                "colou": row[4]
+                }
+
+        return resultat
+
+
 db = WeePlantDB()
-#db.getTable('humidity')
-#print("-"*50)
+print(db.getHumidityLog(2))
 
-db.resetTables()
-db.addTestData()
-print(db.getPlant(1))
+#db.resetTables()
+#db.addTestData()
 
+#print(db.getPlant(1))
 #db.getTable('humidity')
