@@ -9,22 +9,13 @@ SQL_USERNAME = 'wee'
 SQL_PASSWORD = 'weeplant1234'
 SQL_PORT = 5432
 
-class Plant:
-    def __init__(self, id, db):
-        self.db = db
-
-        cursor = self.conn.cursor()
-        cursor.execute('SELECT * FROM Plant WHERE id = \'%s\';', (str(id),))
-
-        for row in cursor:
-            print(list(row))
-
-
 class WeePlantDB():
-
     def __init__(self):
         #Create a connection to the database with our credentials.
         self.conn = pg.connect(dbname=SQL_DATABASE, user=SQL_USERNAME, password=SQL_PASSWORD, host=SQL_HOST, port=SQL_PORT, sslmode="prefer")
+
+    def closeDB(self):
+        self.conn.close()
 
     def resetTables(self):
         cursor = self.conn.cursor()
@@ -56,6 +47,7 @@ class WeePlantDB():
                             PRIMARY KEY (time, plant_ID),
                             FOREIGN KEY (plant_ID) REFERENCES Plant(plant_ID));""", vars=None)
         self.conn.commit()
+        cursor.close()
 
     def addTestData(self):
         cursor = self.conn.cursor()
@@ -79,7 +71,7 @@ class WeePlantDB():
         queryImages += "('1999-01-08 04:05:06', 1, %s, 35, ARRAY[255, 0, 0]),"
         queryImages += "('1999-01-08 04:05:06', 2, %s, 400, ARRAY[10, 255, 0]),"
         queryImages += "('1999-01-08 04:05:06', 3, %s, 5, ARRAY[2, 200, 200]);"
-        cursor.execute(queryImages, (str(bi1), str(bi2), str(bi3), ))
+        cursor.execute(queryImages, (bi1, bi2, bi3, ))
 
         queryHumidity = "INSERT INTO Humidity(time, plant_ID, value) VALUES "
         queryHumidity += "('1999-01-08 04:05:06', 1, .4),"
@@ -91,6 +83,7 @@ class WeePlantDB():
         queryHumidity = queryHumidity[:-2] + ";"
         cursor.execute(queryHumidity, vars=None)
         self.conn.commit()
+        cursor.close()
 
     def printTable(self, name):
         cursor = self.conn.cursor()
@@ -98,6 +91,7 @@ class WeePlantDB():
 
         for row in cursor:
             print(list(row))
+        cursor.close()
 
     def getPlant(self, id):
         cursor = self.conn.cursor()
@@ -114,6 +108,7 @@ class WeePlantDB():
                 "photo_period": row[5]
                 }
 
+        cursor.close()
         return resultat
 
     def getHumidityLog(self, id):
@@ -133,6 +128,7 @@ class WeePlantDB():
                 }
             resultat.append(mostra)
 
+        cursor.close()
         return resultat
 
     def getHumidityLast(self, id):
@@ -152,6 +148,7 @@ class WeePlantDB():
                 "value": row[2]
                 }
 
+        cursor.close()
         return resultat
 
     def addHumidityMeasure(self, time, plant_id, value):
@@ -160,12 +157,57 @@ class WeePlantDB():
                             VALUES (%s, %s, %s)""",
                             (str(time), str(plant_id), str(value),))
         self.conn.commit()
+        cursor.close()
+
+    def getImages(self, plant_id):
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT image
+                            FROM imatge
+                            WHERE plant_ID = %s
+                            ORDER BY time;""", (str(plant_id), ))
+
+        resultat = []
+        for row in cursor:
+            print(row)
+            resultat.append(row[0])
+
+        cursor.close()
+        return resultat
+
+    def getImages(self, plant_id):
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT image
+                            FROM imatge
+                            WHERE plant_ID = %s
+                            ORDER BY time;""", (str(plant_id), ))
+
+        resultat = []
+        i = 0
+        for row in cursor:
+            resultat.append(row[0])
+            #open(str(plant_id) + "_" + str(i) + ".jpg", 'wb').write(row[0])
+            i += 1
+
+        cursor.close()
+        return resultat
+
+    def addImage(self, time, plant_id, image, height, colour):
+        cursor = self.conn.cursor()
+        cursor.execute("""INSERT INTO Imatge (time, plant_ID, image, height, colour) VALUES
+                            (%s, %s, %s, %s, ARRAY%s)""",
+                            (str(time), str(plant_id), pg.Binary(image), str(height), str(colour))))
+        self.conn.commit()
+        cursor.close()
 
 db = WeePlantDB()
+#db.printTable("imatge")
+
 #print(db.getHumidityLog(2))
 
 #db.resetTables()
 #db.addTestData()
 
+#db.getImages(3)
 #print(db.getPlant(1))
 #db.printTable('humidity')
+db.closeDB()
