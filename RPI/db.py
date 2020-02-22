@@ -14,7 +14,7 @@ class Plant:
         self.db = db
 
         cursor = self.conn.cursor()
-        cursor.execute('SELECT * FROM Plant WHERE id = \'' + id + '\';', vars=None)
+        cursor.execute('SELECT * FROM Plant WHERE id = \'%s\';', (str(id),))
 
         for row in cursor:
             print(list(row))
@@ -49,7 +49,12 @@ class WeePlantDB():
                             FOREIGN KEY (plant_ID) REFERENCES Plant(plant_ID) );""", vars=None)
 
         cursor.execute('DROP TABLE IF EXISTS Humidity CASCADE;', vars=None)
-        cursor.execute('CREATE TABLE Humidity ( time TIMESTAMP, plant_ID INT, value REAL, PRIMARY KEY (time, plant_ID), FOREIGN KEY (plant_ID) REFERENCES Plant(plant_ID));', vars=None)
+        cursor.execute("""CREATE TABLE Humidity (
+                            time TIMESTAMP,
+                            plant_ID INT,
+                            value REAL,
+                            PRIMARY KEY (time, plant_ID),
+                            FOREIGN KEY (plant_ID) REFERENCES Plant(plant_ID));""", vars=None)
         self.conn.commit()
 
     def addTestData(self):
@@ -71,10 +76,10 @@ class WeePlantDB():
         bi3 = pg.Binary(image3)
 
         queryImages = "INSERT INTO Imatge(time, plant_ID, image, height, colour) VALUES "
-        queryImages += "('1999-01-08 04:05:06', 1, " + str(bi1) + ", 35, ARRAY[255, 0, 0]),"
-        queryImages += "('1999-01-08 04:05:06', 2, " + str(bi2) + ", 400, ARRAY[10, 255, 0]),"
-        queryImages += "('1999-01-08 04:05:06', 3, " + str(bi3) + ", 5, ARRAY[2, 200, 200]);"
-        cursor.execute(queryImages)
+        queryImages += "('1999-01-08 04:05:06', 1, %s, 35, ARRAY[255, 0, 0]),"
+        queryImages += "('1999-01-08 04:05:06', 2, %s, 400, ARRAY[10, 255, 0]),"
+        queryImages += "('1999-01-08 04:05:06', 3, %s, 5, ARRAY[2, 200, 200]);"
+        cursor.execute(queryImages, (str(bi1), str(bi2), str(bi3), ))
 
         queryHumidity = "INSERT INTO Humidity(time, plant_ID, value) VALUES "
         queryHumidity += "('1999-01-08 04:05:06', 1, .4),"
@@ -84,11 +89,10 @@ class WeePlantDB():
                 hum = random.randint(((10*(j+1))+10), (100 - 10*(j+1))) / 100
                 queryHumidity += "(\'1999-01-08 04:" + str(int(i/60)) + ":" + str(int(i%60)) + "\', " + str(j+1) + ", " + str(hum) + "), "
         queryHumidity = queryHumidity[:-2] + ";"
-        cursor.execute(queryHumidity)
-
+        cursor.execute(queryHumidity, vars=None)
         self.conn.commit()
 
-    def getTable(self, name):
+    def printTable(self, name):
         cursor = self.conn.cursor()
         cursor.execute('SELECT * FROM ' + name + ';', vars=None)
 
@@ -97,7 +101,7 @@ class WeePlantDB():
 
     def getPlant(self, id):
         cursor = self.conn.cursor()
-        cursor.execute('SELECT * FROM plant WHERE plant_ID = ' + str(id) + ';', vars=None)
+        cursor.execute('SELECT * FROM plant WHERE plant_ID = %s;', (str(id),))
 
         resultat = {}
         for row in cursor:
@@ -114,20 +118,18 @@ class WeePlantDB():
 
     def getHumidityLog(self, id):
         cursor = self.conn.cursor()
-        cursor.execute("""SELECT *
+        cursor.execute("""SELECT h.time, h.plant_ID, h.value
                             FROM humidity h
                             INNER JOIN plant p ON p.plant_ID = h.plant_ID
-                            WHERE h.plant_ID = """ + str(id) + """
-                            ORDER BY time ASC;""", vars=None)
+                            WHERE h.plant_ID = %s
+                            ORDER BY time ASC;""", (str(id), ))
 
         resultat = []
         for row in cursor:
             mostra = {
                 "time": row[0],
                 "plant_ID": row[1],
-                "image": row[2],
-                "height": row[3],
-                "colou": row[4]
+                "value": row[2]
                 }
             resultat.append(mostra)
 
@@ -135,31 +137,35 @@ class WeePlantDB():
 
     def getHumidityLast(self, id):
         cursor = self.conn.cursor()
-        cursor.execute("""SELECT *
+        cursor.execute("""SELECT h.time, h.plant_ID, h.value
                             FROM humidity h
                             INNER JOIN plant p ON p.plant_ID = h.plant_ID
-                            WHERE h.plant_ID = """ + str(id) + """
+                            WHERE h.plant_ID = %s
                             ORDER BY time DESC
-                            LIMIT 1;""", vars=None)
+                            LIMIT 1;""", (str(id), ))
 
         resultat = {}
         for row in cursor:
             resultat = {
                 "time": row[0],
                 "plant_ID": row[1],
-                "image": row[2],
-                "height": row[3],
-                "colou": row[4]
+                "value": row[2]
                 }
 
         return resultat
 
+    def addHumidityMeasure(self, time, plant_id, value):
+        cursor = self.conn.cursor()
+        cursor.execute("""INSERT INTO Humidity (time, plant_ID, value)
+                            VALUES (%s, %s, %s)""",
+                            (str(time), str(plant_id), str(value),))
+        self.conn.commit()
 
 db = WeePlantDB()
-print(db.getHumidityLog(2))
+#print(db.getHumidityLog(2))
 
 #db.resetTables()
 #db.addTestData()
 
 #print(db.getPlant(1))
-#db.getTable('humidity')
+#db.printTable('humidity')
