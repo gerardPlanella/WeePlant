@@ -50,6 +50,7 @@ class WeePlantDB():
                             plant_ID SERIAL,
                             name VARCHAR(255),
                             pot_number SMALLINT,
+                            since DATE,
                             watering_time NUMERIC,
                             moisture_threshold NUMERIC,
                             photo_period INT,
@@ -258,7 +259,7 @@ class WeePlantDB():
         cursor = self.conn.cursor()
         cursor.execute("""INSERT INTO Imatge (time, plant_ID, image, height, colour) VALUES
                             (%s, %s, %s, %s, ARRAY%s)""",
-                            (str(time), str(plant_id), pg.Binary(image), str(height), str(colour))))
+                            (str(time), str(plant_id), pg.Binary(image), str(height), str(colour)))
         self.conn.commit()
         cursor.close()
 
