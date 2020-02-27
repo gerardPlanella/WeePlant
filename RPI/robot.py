@@ -8,8 +8,6 @@ DEBUG = False
 ROBOT_STATUS_BITS = "robot_status_bits"
 ROBOT_JOINT_POSITIONS = "get_all_joint_positions"
 
-UNKNOWN_HUMAN = "Unknown"
-
 class UR():
 
 	__slots__ = ('address', 'port_Data', 'port_Move', 'positions')
