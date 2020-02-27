@@ -5,7 +5,7 @@ import sys
 from PIL import Image, ImageFile
 from io import BytesIO
 
-HOST = '192.168.1.40' 
+HOST = '192.168.1.143' 
 PORT = 8006
 
 IMAGE = 1

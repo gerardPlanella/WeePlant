@@ -50,6 +50,7 @@ class WeePlantDB():
                             plant_ID SERIAL,
                             name VARCHAR(255),
                             pot_number SMALLINT,
+                            since DATE,
                             watering_time NUMERIC,
                             moisture_threshold NUMERIC,
                             photo_period INT,
