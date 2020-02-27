@@ -1,6 +1,5 @@
 # import the necessary packages
 from pyzbar import pyzbar
-import argparse
 import cv2
 
 # load the input image
