@@ -7,7 +7,6 @@
 #include "driver/rtc_io.h"
 
 #define DEBUG
-#define HOME
 
 #ifdef DEBUG
 #define PRINTLN(x) Serial.println(x);
@@ -59,7 +58,7 @@ const char* WiFiPassword = "ur_hack_la_salle";
 
 
 const uint16_t port = 8006;
-const char * host = "192.168.1.40";
+const char * host = "192.168.1.143";
 
 const float ADC_MULTIPLIER = 0.1875F; /* ADS1115  @ +/- 6.144V gain (16-bit results) */
 const float HUMIDITY_CONVERSION = 10.0F;
