@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import psycopg2 as pg
 import random
+import operator as op
 from PIL import Image
 
 """
@@ -78,6 +79,16 @@ class WeePlantDB():
                             PRIMARY KEY (time, plant_ID),
                             FOREIGN KEY (plant_ID) REFERENCES Plant(plant_ID));""", vars=None)
 
+        #Borrem la taula Humidity
+        cursor.execute('DROP TABLE IF EXISTS Watering CASCADE;', vars=None)
+        #Tornem a crear la taula Humidity (buida)
+        cursor.execute("""CREATE TABLE Watering (
+                            time TIMESTAMP,
+                            plant_ID INT,
+                            water_applied REAL,
+                            PRIMARY KEY (time, plant_ID),
+                            FOREIGN KEY (plant_ID) REFERENCES Plant(plant_ID));""", vars=None)
+
         #Afegim els canvis realitzats a la base de dades real
         self.conn.commit()
         #Tanquem l'objecte
@@ -89,10 +100,10 @@ class WeePlantDB():
         cursor = self.conn.cursor()
 
         # Creem i executem la query per carregar les plantes de prova
-        queryPlants = "INSERT INTO Plant(name, pot_number, watering_time, moisture_threshold, photo_period) VALUES "
-        queryPlants += "('Rafflesia arnoldii', 1, 500, .7, 200),"
-        queryPlants += "('Dracaena cinnabari', 2, 10, .2, 20),"
-        queryPlants += "('Tacca chantrieri', 3, 1, .9, 2);"
+        queryPlants = "INSERT INTO Plant(name, pot_number, since, watering_time, moisture_threshold, photo_period) VALUES "
+        queryPlants += "('Rafflesia arnoldii', 1, '1999-01-08 04:05:06', 500, .7, 200), "
+        queryPlants += "('Dracaena cinnabari', 2, '1999-01-08 04:05:06', 10, .2, 20), "
+        queryPlants += "('Tacca chantrieri', 3, '1999-01-08 04:05:06', 1, .9, 2);"
         cursor.execute(queryPlants)
 
         # Preparem i executem la query per carregar les imatges
@@ -121,6 +132,20 @@ class WeePlantDB():
 
         #Executem la query
         cursor.execute(queryHumidity, vars=None)
+
+        # Query per a carregar informació de un log de reg
+        queryWatering = "INSERT INTO Watering(time, plant_ID, water_applied) VALUES "
+        queryWatering += "('1999-01-08 04:05:06', 1, 3),"
+
+        # Afegim 100 mostres per a cada planta amb dades aleatories
+        for j in range (3):
+            for i in range(100):
+                wat = 40 + op.mod(i, 20)
+                queryWatering += "(\'1999-01-08 04:" + str(int(i/60)) + ":" + str(int(i%60)) + "\', " + str(j+1) + ", " + str(wat) + "), "
+        queryWatering = queryWatering[:-2] + ";"
+
+        #Executem la query
+        cursor.execute(queryWatering, vars=None)
 
         # Guardem els canvis a la DB
         self.conn.commit()
@@ -268,8 +293,8 @@ db = WeePlantDB()
 
 #print(db.getHumidityLog(2))
 
-#db.resetTables()
-#db.addTestData()
+db.resetTables()
+db.addTestData()
 
 #db.getImages(3)
 #print(db.getPlant(1))
