@@ -6,6 +6,7 @@ Dependencies:
 
 import socketio #https://python-socketio.readthedocs.io/en/latest/client.html
 from robot import UR
+import db as database
 #from gpiozero import OutputDevice
 
 sio = socketio.Client()
@@ -24,18 +25,23 @@ def on_message(data):
 @sio.event
 def connect():
     print('connection established')
-    
+
 @sio.event
 def disconnect():
     print('disconnected from server')
 
-if __name__ == '__main__':
+
+def main():
+    db = database.WeePlantDB()
     
 
-    
+if __name__ == '__main__':
+
     sio.connect('http://localhost:2000')
     sio.wait()
 
     #ur = UR("192.168.1.104")
     #ur.get_actual_joint_positions()
     #ur.moveJoints("Starting position", 0.1, 0.1)
+
+    main()
