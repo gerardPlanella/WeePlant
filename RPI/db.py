@@ -54,6 +54,7 @@ class WeePlantDB():
                             since DATE,
                             watering_time NUMERIC,
                             moisture_threshold NUMERIC,
+                            moisture_period INT,
                             photo_period INT,
                             PRIMARY KEY (plant_ID));""", vars=None)
 
@@ -101,9 +102,9 @@ class WeePlantDB():
 
         # Creem i executem la query per carregar les plantes de prova
         queryPlants = "INSERT INTO Plant(name, pot_number, since, watering_time, moisture_threshold, photo_period) VALUES "
-        queryPlants += "('Rafflesia arnoldii', 1, '1999-01-08 04:05:06', 500, .7, 200), "
-        queryPlants += "('Dracaena cinnabari', 2, '1999-01-08 04:05:06', 10, .2, 20), "
-        queryPlants += "('Tacca chantrieri', 3, '1999-01-08 04:05:06', 1, .9, 2);"
+        queryPlants += "('Rafflesia arnoldii', 1, '1999-01-08 04:05:06', 500, .7, 300, 200), "
+        queryPlants += "('Dracaena cinnabari', 2, '1999-01-08 04:05:06', 10, .2, 600, 20), "
+        queryPlants += "('Tacca chantrieri', 3, '1999-01-08 04:05:06', 1, .9, 60, 2);"
         cursor.execute(queryPlants)
 
         # Preparem i executem la query per carregar les imatges
@@ -178,22 +179,34 @@ class WeePlantDB():
                 "plant_ID": row[0],
                 "name": row[1],
                 "pot_number": row[2],
-                "watering_time": row[3],
-                "moisture_threshold": row[4],
-                "photo_period": row[5]
+                "since": row[3],
+                "watering_time": row[4],
+                "moisture_threshold": row[5],
+                "moisture_period": row[6],
+                "photo_period": row[7]
                 }
 
         cursor.close()
         return resultat
 
+    def getActualPlants(self):
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT plant_ID FROM plant WHERE (pot_number >= 1 and pot_number <= 3);""")
+
+        resultat = []
+        for row in cursor:
+            resultat.append(int(row[0]))
+
+        return resultat
+
     # Funció que afegeix una planta a la base de dades i retorna el ID que se li assigna per defecte
-    def addPlant(self, name, pot_number, watering_time, moisture_threshold, photo_period):
+    def addPlant(self, name, pot_number, since, watering_time, moisture_threshold, moisture_period, photo_period):
         # Obtenim l'objecte que permet executar les queries
         cursor = self.conn.cursor()
 
         # Executem la query per obtenir la informació desitjada
-        cursor.execute("""INSERT INTO Plant (name, pot_number, watering_time, moisture_threshold, photo_period)
-                            VALUES (%s, %s, %s, %s, %s)""", (name, str(pot_number), str(watering_time), str(moisture_threshold), str(photo_period), ))
+        cursor.execute("""INSERT INTO Plant (name, pot_number, since, watering_time, moisture_threshold, moisture_period, photo_period)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)""", (name, str(pot_number), str(since), str(watering_time), str(moisture_threshold), str(moisture_period), str(photo_period), ))
         cursor.execute("""SELECT plant_id from plant where pot_number = %s""", (str(pot_number), ))
 
         # Creem el diccionari que emmagatema i retorna tota la informació
@@ -242,9 +255,61 @@ class WeePlantDB():
         for row in cursor:
             resultat = {
                 "time": row[0],
-                "plant_ID": row[1],
                 "value": row[2]
                 }
+
+        cursor.close()
+        return resultat
+
+    # Funció que retorna un diccionari amb el moment i el valor de la última
+    # mesura d'humitat realitzada
+    def getWateringLast(self, id):
+        # Obtenim l'objecte que permet executar les queries
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT w.time, w.plant_ID, w.water_applied
+                            FROM Watering w
+                            INNER JOIN plant p ON p.plant_ID = w.plant_ID
+                            WHERE w.plant_ID = %s
+                            ORDER BY time DESC
+                            LIMIT 1;""", (str(id), ))
+
+        resultat = {}
+        for row in cursor:
+            resultat = {
+                "time": row[0],
+                "value": row[2]
+                }
+
+        cursor.close()
+        return resultat
+
+    def getImageLastTime(self, id):
+        # Obtenim l'objecte que permet executar les queries
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT time
+                            FROM Imatge
+                            WHERE plant_ID = %s
+                            ORDER BY time DESC
+                            LIMIT 1;""", (str(id), ))
+
+        resultat = -1
+        for row in cursor:
+            resultat = row[0]
+
+        cursor.close()
+        return resultat
+
+    def getLastPlantAdded(self):
+        # Obtenim l'objecte que permet executar les queries
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT plant_ID
+                            FROM plant
+                            ORDER BY since DESC
+                            LIMIT 1;""", vars=None)
+
+        resultat = -1
+        for row in cursor:
+            resultat = row[0]
 
         cursor.close()
         return resultat
@@ -254,6 +319,16 @@ class WeePlantDB():
         # Obtenim l'objecte que permet executar les queries
         cursor = self.conn.cursor()
         cursor.execute("""INSERT INTO Humidity (time, plant_ID, value)
+                            VALUES (%s, %s, %s)""",
+                            (str(time), str(plant_id), str(value),))
+        self.conn.commit()
+        cursor.close()
+
+    # Funció per afegir una nova mostra d'humitat
+    def addWateringValue(self, time, plant_id, value):
+        # Obtenim l'objecte que permet executar les queries
+        cursor = self.conn.cursor()
+        cursor.execute("""INSERT INTO Watering (time, plant_ID, water_applied)
                             VALUES (%s, %s, %s)""",
                             (str(time), str(plant_id), str(value),))
         self.conn.commit()
