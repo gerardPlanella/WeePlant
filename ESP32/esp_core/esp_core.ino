@@ -21,6 +21,8 @@
 
 #define CAMERA_MODEL_AI_THINKER
 
+#define HOME
+
 // Pin definition for CAMERA_MODEL_AI_THINKER
 #define PWDN_GPIO_NUM     32
 #define RESET_GPIO_NUM    -1
@@ -49,16 +51,19 @@
 #define BURST_SIZE 200
 
 #ifdef HOME
-const char *SSID = "MOVISTAR_8182";
+/*const char *SSID = "MOVISTAR_8182";
 const char* WiFiPassword = "jwF4292858Pv25hQ332X";
+*/
+const char *SSID = "MOVISTAR_34A8";
+const char* WiFiPassword = "YNwzM7Ks7AE49FN4zEzz";
 #else
 const char *SSID = "dd-wrt";
 const char* WiFiPassword = "ur_hack_la_salle";
 #endif
 
 
-const uint16_t port = 8006;
-const char * host = "192.168.1.143";
+const uint16_t port = 8004;
+const char * host = "192.168.1.39";
 
 const float ADC_MULTIPLIER = 0.1875F; /* ADS1115  @ +/- 6.144V gain (16-bit results) */
 const float HUMIDITY_CONVERSION = 10.0F;

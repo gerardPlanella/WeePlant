@@ -4,7 +4,7 @@ import argparse
 import cv2
 
 # load the input image
-image = cv2.imread("/home/adria/Documents/Assignatures/Projectes_en_Robotica/Python/WeePlant/RPI/frame.png")
+image = cv2.imread("./test.jpeg")
 
 # find the barcodes in the image and decode each of the barcodes
 barcodes = pyzbar.decode(image)

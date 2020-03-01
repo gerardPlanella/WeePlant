@@ -12,6 +12,8 @@ HUMIDITY = 2
 EXIT = 3
 
 
+
+
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print('# Socket created')
 
