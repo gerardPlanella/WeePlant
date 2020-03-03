@@ -337,6 +337,7 @@ class WeePlantDB():
         cursor.close()
 
     # Funció per obtenir totes les imatges emmagatzemades d'una planta en un array
+    # ALERT!!!: La funció pot petar fuerte, no testeada pero no necessaria
     def getImages(self, plant_id):
         # Obtenim l'objecte que permet executar les queries
         cursor = self.conn.cursor()
@@ -348,7 +349,7 @@ class WeePlantDB():
         resultat = []
         i = 0
         for row in cursor:
-            resultat.append(row[0])
+            resultat.append(base64.b64decode(row[0]))
             #open(str(plant_id) + "_" + str(i) + ".jpg", 'wb').write(row[0])
             i += 1
 
