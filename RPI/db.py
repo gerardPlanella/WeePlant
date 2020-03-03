@@ -65,7 +65,7 @@ class WeePlantDB():
         cursor.execute("""CREATE TABLE Imatge (
                             time TIMESTAMP,
                             plant_ID INT,
-                            image VARCHAR(1000000),
+                            image text,
                             height REAL,
                             colour SMALLINT[],
                             PRIMARY KEY (time, plant_ID),
@@ -117,10 +117,16 @@ class WeePlantDB():
         # Preparem i executem la query
         queryImages = "INSERT INTO Imatge(time, plant_ID, image, height, colour) VALUES "
         queryImages += "('1999-01-08 04:05:06', 1, %s, 35, ARRAY[255, 0, 0]),"
+        queryImages += "('1999-01-09 04:05:06', 1, %s, 35, ARRAY[255, 0, 0]),"
+        queryImages += "('1999-01-10 04:05:06', 1, %s, 35, ARRAY[255, 0, 0]),"
         queryImages += "('1999-01-08 04:05:06', 2, %s, 400, ARRAY[10, 255, 0]),"
         queryImages += "('1999-01-08 04:05:06', 3, %s, 5, ARRAY[2, 200, 200]);"
         #cursor.execute(queryImages, (pg.Binary(image1), pg.Binary(image2), pg.Binary(image3), ))
-        cursor.execute(queryImages, (base64.b64encode(image1), base64.b64encode(image2), base64.b64encode(image3), ))
+        cursor.execute(queryImages,(str(base64.b64encode(image1))[2:-1],
+                                    str(base64.b64encode(image2))[2:-1],
+                                    str(base64.b64encode(image3))[2:-1],
+                                    str(base64.b64encode(image2))[2:-1],
+                                    str(base64.b64encode(image3))[2:-1], ))
 
         # Query per a carregar informació de un log d'humitat
         queryHumidity = "INSERT INTO Humidity(time, plant_ID, value) VALUES "
@@ -341,6 +347,8 @@ class WeePlantDB():
     def getImages(self, plant_id):
         # Obtenim l'objecte que permet executar les queries
         cursor = self.conn.cursor()
+        
+        
         cursor.execute("""SELECT image
                             FROM imatge
                             WHERE plant_ID = %s
@@ -348,8 +356,9 @@ class WeePlantDB():
 
         resultat = []
         i = 0
+        
         for row in cursor:
-            resultat.append(base64.b64decode(row[0]))
+            #resultat.append(base64.b64decode(row[0]))
             #open(str(plant_id) + "_" + str(i) + ".jpg", 'wb').write(row[0])
             i += 1
 
@@ -373,8 +382,9 @@ db = WeePlantDB()
 
 db.resetTables()
 db.addTestData()
-
-#db.getImages(3)
+#print(db.getImages(1))
 #print(db.getPlant(1))
 #db.printTable('humidity')
 db.closeDB()
+
+# 

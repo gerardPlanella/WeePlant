@@ -1,6 +1,5 @@
 import datetime
 import time
-import base64
 """
 a = datetime.datetime.now()
 
@@ -17,17 +16,17 @@ else: ttwfnm = 0"""
 
 
 import base64
-with open("RPI/images/1.jpg", "rb") as img_file:
+with open("./RPI/images/1.jpg", "rb") as img_file:
+    my_string = base64.b64encode(img_file.read())
+print(my_string)
+
+import base64
+with open("./RPI/images/2.jpeg", "rb") as img_file:
     my_string = base64.b64encode(img_file.read())
 print(len(my_string))
 
 import base64
-with open("RPI/images/2.jpeg", "rb") as img_file:
-    my_string = base64.b64encode(img_file.read())
-print(len(my_string))
-
-import base64
-with open("RPI/images/3.jpg", "rb") as img_file:
+with open("./RPI/images/3.jpg", "rb") as img_file:
     my_string = base64.b64encode(img_file.read())
 print(len(my_string))
 

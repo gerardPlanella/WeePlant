@@ -14,7 +14,7 @@ import esp32
 
 sio = socketio.Client()
 db = database.WeePlantDB()
-esp = esp32.ESP32()
+#esp = esp32.ESP32()
 
 running = True
 noplant = True
@@ -195,7 +195,7 @@ def doMeasure(plant_id):
 
     plantInfo = plantsInfo[0]
     for plant in plantsInfo:
-        if plant["plant_ID"] = plant_id:
+        if plant["plant_ID"] == plant_id:
             plantInfo = plant
             break
 
@@ -236,15 +236,15 @@ def main():
         time.sleep(nextMeasure["time"])
 
         if (nextMeasure["type"] in "humidity"): doMeasure(nextMeasure["index"])
-        else if (nextMeasure["type"] in "image"): takePicture(nextMeasure["index"])
+        elif (nextMeasure["type"] in "image"): takePicture(nextMeasure["index"])
 
     db.closeDB()
 
 if __name__ == '__main__':
 
-    sio.connect('http://www.weeplant.es:80')
+    sio.connect('http://localhost:2000')
 
-    main()
+    #main()
     sio.wait()
 
     #ur = UR("192.168.1.104")
