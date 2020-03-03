@@ -2,6 +2,7 @@
 import psycopg2 as pg
 import random
 import operator as op
+import base64
 from PIL import Image
 
 """
@@ -64,7 +65,7 @@ class WeePlantDB():
         cursor.execute("""CREATE TABLE Imatge (
                             time TIMESTAMP,
                             plant_ID INT,
-                            image BYTEA,
+                            image VARCHAR(1000000),
                             height REAL,
                             colour SMALLINT[],
                             PRIMARY KEY (time, plant_ID),
@@ -101,7 +102,7 @@ class WeePlantDB():
         cursor = self.conn.cursor()
 
         # Creem i executem la query per carregar les plantes de prova
-        queryPlants = "INSERT INTO Plant(name, pot_number, since, watering_time, moisture_threshold, photo_period) VALUES "
+        queryPlants = "INSERT INTO Plant(name, pot_number, since, watering_time, moisture_threshold, moisture_period, photo_period) VALUES "
         queryPlants += "('Rafflesia arnoldii', 1, '1999-01-08 04:05:06', 500, .7, 300, 200), "
         queryPlants += "('Dracaena cinnabari', 2, '1999-01-08 04:05:06', 10, .2, 600, 20), "
         queryPlants += "('Tacca chantrieri', 3, '1999-01-08 04:05:06', 1, .9, 60, 2);"
@@ -118,7 +119,8 @@ class WeePlantDB():
         queryImages += "('1999-01-08 04:05:06', 1, %s, 35, ARRAY[255, 0, 0]),"
         queryImages += "('1999-01-08 04:05:06', 2, %s, 400, ARRAY[10, 255, 0]),"
         queryImages += "('1999-01-08 04:05:06', 3, %s, 5, ARRAY[2, 200, 200]);"
-        cursor.execute(queryImages, (pg.Binary(image1), pg.Binary(image2), pg.Binary(image3), ))
+        #cursor.execute(queryImages, (pg.Binary(image1), pg.Binary(image2), pg.Binary(image3), ))
+        cursor.execute(queryImages, (base64.b64encode(image1), base64.b64encode(image2), base64.b64encode(image3), ))
 
         # Query per a carregar informació de un log d'humitat
         queryHumidity = "INSERT INTO Humidity(time, plant_ID, value) VALUES "
@@ -359,7 +361,7 @@ class WeePlantDB():
         cursor = self.conn.cursor()
         cursor.execute("""INSERT INTO Imatge (time, plant_ID, image, height, colour) VALUES
                             (%s, %s, %s, %s, ARRAY%s)""",
-                            (str(time), str(plant_id), pg.Binary(image), str(height), str(colour)))
+                            (str(time), str(plant_id), base64.b64encode(image), str(height), str(colour)))
         self.conn.commit()
         cursor.close()
 
