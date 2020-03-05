@@ -28,7 +28,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 QR_TMP = "/tmp/qr_tmp.jpeg"
 
 HOST = '192.168.1.143' 
-PORT = 8003
+PORT = 9000
 
 class ESP32():
     __slots__ = ('sock', 'conn', 'addr', 'port', 'connected')

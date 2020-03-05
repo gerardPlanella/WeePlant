@@ -1,4 +1,4 @@
-# !/usr/bin/python
+#!/usr/bin/env python3
 
 #./plant.py -i plant.jpeg -o ./plant-image-output -r plant_info.txt -w -D 'print'
 import sys, traceback
@@ -107,8 +107,8 @@ def main():
     boundary_img1 = pcv.analyze_bound_horizontal(img=img, obj=obj, mask=mask, line_position=1680)
 
     # Determine color properties: Histograms, Color Slices, output color analyzed histogram (optional)
-    color_histogram = pcv.analyze_color(rgb_img=img, mask=kept_mask, hist_plot_type='all')
-
+    color_histogram = pcv.analyze_color(rgb_img=img, mask=kept_mask, hist_plot_type=None)
+    
     # Pseudocolor the grayscale image
     pseudocolored_img = pcv.visualize.pseudocolor(gray_img=s, mask=kept_mask, cmap='jet')
 
