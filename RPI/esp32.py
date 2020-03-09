@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # sudo pip3 install pyzbar
 # sudo apt-get install libzbar0
 

@@ -1,4 +1,14 @@
-#!/usr/bin/env python3
+"""
+Requirements:
+    matplotlib
+    numpy
+    pandas
+    python-dateutil
+    scipy
+    scikit-image
+    plotnine
+    opencv-python
+"""
 import sys, traceback
 import cv2
 import numpy as np
