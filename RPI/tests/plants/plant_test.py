@@ -1,54 +1,35 @@
 #!/usr/bin/env python3
-
-#./plant.py -i plant.jpeg -o ./plant-image-output -r plant_info.txt -w -D 'print'
 import sys, traceback
 import cv2
 import numpy as np
-import argparse
-import string
 import json
 import os
 from plantcv import plantcv as pcv
 
-def options():
-    parser = argparse.ArgumentParser(description="Imaging processing with opencv")
-    parser.add_argument("-i", "--image", help="Input image file.", required=True)
-    parser.add_argument("-o", "--outdir", help="Output directory for image files.", required=False)
-    parser.add_argument("-r", "--result", help="result file.", required=False)
-    parser.add_argument("-w", "--writeimg", help="write out images.", default=False, action="store_true")
-    parser.add_argument("-D", "--debug",
-                        help="can be set to 'print' or None (or 'plot' if in jupyter) prints intermediate images.",
-                        default=None)
-    args = parser.parse_args()
-    return args
-
-
 class Plant():
-    __slots__ = ["debug", "output_dir", "image_path", "write_image", "result_path", "data", "data_ready"]
+    __slots__ = ["debug", "output_dir", "image_path", "write_image_output", "result_path", "data", "data_ready", "write_result"]
 
-    def __init__(self, debug, output_dir, image_path, write_image,result_path):
-        self.debug = debug
-        self.output_dir = output_dir
+    def __init__(self, image_path, write_image_output,result_path, write_result):
+        self.debug = True
+        self.output_dir = "./temp"
         self.image_path = image_path
-        self.write_image = write_image
+        self.write_image_output = write_image_output
         self.result_path = result_path
         self.data_ready = False
+        self.write_result = write_result
         
-    
-    def setDebug(self, debug):
-        self.debug = debug
-    
-    def setOutputDir(self, output_dir):
-        self.output_dir = output_dir
+    def setWriteResult(self, write_result):
+        self.write_result = write_result
     
     def setImagePath(self, image_path):
         self.image_path = image_path
     
-    def setWriteImage(self, write_image):
+    def setWriteImageOutput(self, write_image):
         self.write_image = write_image
     
     def setResultPath(self, result_path):
         self.result_path = result_path
+
     
     
     def calculate(self):
@@ -120,15 +101,16 @@ class Plant():
 
         ############### Analysis ################
 
-        outfile=False
-        if self.write_image == True:
-            outfile = self.output_dir + "/" + filename
-
         # Find shape properties, output shape image (optional)
         shape_imgs = pcv.analyze_object(img=img, obj=obj, mask=mask)
 
         # Shape properties relative to user boundary line (optional)
         boundary_img1 = pcv.analyze_bound_horizontal(img=img, obj=obj, mask=mask, line_position=1680)
+
+        outfile=False
+        if self.write_image_output == True:
+            outfile = self.output_dir + "/" + filename
+            cv2.imwrite(outfile,boundary_img1)
 
         # Determine color properties: Histograms, Color Slices, output color analyzed histogram (optional)
         color_histogram = pcv.analyze_color(rgb_img=img, mask=kept_mask, hist_plot_type="rgb")
@@ -140,8 +122,9 @@ class Plant():
         pcv.print_results(filename=self.result_path)
 
         with open(self.result_path) as f:
-            self.data = json.load(f) 
-            #os.remove(self.result_path)
+            self.data = json.load(f)
+            if not self.write_result: 
+                os.remove(self.result_path)
             self.data_ready = True
         
     def getHeight(self):
@@ -160,17 +143,55 @@ class Plant():
             return self.data["observations"]["object_in_frame"]["value"]
         return False
     
-
-
-        
+    def getColourHistogram(self):
+        if self.data_ready :
+            return (self.data["observations"]["red_frequencies"], self.data["observations"]["green_frequencies"], self.data["observations"]["blue_frequencies"])
+        return (False, False, False)
+    
+      
 if __name__ == '__main__':
-    plant = Plant(debug= True, output_dir="./temp", image_path="plant.jpeg", write_image=True,result_path= "./temp/plant_info.json")
+    plant = Plant(image_path="plant_2.jpeg", write_image_output=True,result_path= "./temp/plant_info.json", write_result=True)
     
     plant.calculate()
 
     if plant.isFramed() is True:
-        print("Plant Height: " + str(plant.getHeight()) + " pix\n")
-        print("Plant Width: " + str(plant.getWidth()) + " pix\n")
+        height = plant.getHeight()
+        width = plant.getWidth()
+
+        if (height is not False) and (width is not False) :
+            print("Plant Height: " + str(height) + " pix\n")
+            print("Plant Width: " + str(width) + " pix\n")
+        
+        (red, green, blue) = plant.getColourHistogram()
+
+        if (red != green) and (green != blue) and (blue != False) :
+            print("-------- RED --------\n\n")
+            print(json.dumps(red, indent=4, sort_keys=True) + "\n")
+
+            print("-------- GREEN --------\n\n")
+            print(json.dumps(green, indent=4, sort_keys=True) + "\n")
+
+            print("-------- BLUE --------\n\n")
+            print(json.dumps(blue, indent=4, sort_keys=True) + "\n")
+        
+            #e.g: to get the y axis of the colour red:
+            red_values = red["value"]
+            print("Red Values:\n" + str(red_values) + "\n")
+
+            #e.g to get the first value
+
+            first_red_value = red["value"][0]
+            print("First red value " + str(first_red_value) + "\n")
+
+            #e.g get the x axis
+            red_labels = red["label"]
+            print("Red Labels:\n" + str(red_labels) + "\n")
+
+            #e.g to get the first label
+            first_red_label = red["label"][0]
+            print("First red label " + str(first_red_label) + "\n")
+
+
 
 
 
