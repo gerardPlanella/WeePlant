@@ -2,6 +2,7 @@
 # sudo apt-get install libzbar0
 
 ######################################################
+
 import socket
 import sys
 import os

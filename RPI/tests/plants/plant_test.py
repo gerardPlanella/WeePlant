@@ -174,6 +174,7 @@ if __name__ == '__main__':
             print("-------- BLUE --------\n\n")
             print(json.dumps(blue, indent=4, sort_keys=True) + "\n")
         
+        """
             #e.g: to get the y axis of the colour red:
             red_values = red["value"]
             print("Red Values:\n" + str(red_values) + "\n")
@@ -190,7 +191,7 @@ if __name__ == '__main__':
             #e.g to get the first label
             first_red_label = red["label"][0]
             print("First red label " + str(first_red_label) + "\n")
-
+        """
 
 
 
