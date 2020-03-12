@@ -353,6 +353,21 @@ class WeePlantDB():
         cursor.close()
         return resultat
 
+    def getLastPK(self):
+        # Obtenim l'objecte que permet executar les queries
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT plant_id
+                            FROM Plant
+                            ORDER BY since DESC
+                            LIMIT 1;""", (vars=None)
+
+        resultat = {}
+        for row in cursor:
+            resultat = int(row[0])
+
+        cursor.close()
+        return resultat
+
     def getImageLastTime(self, id):
         # Obtenim l'objecte que permet executar les queries
         cursor = self.conn.cursor()
