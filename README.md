@@ -7,7 +7,7 @@ Robotics Project
 - [psycopg](https://www.psycopg.org/docs/install.html)
 
 ### PlantCV:
-- plantcv 
+- [plantcv](https://plantcv.readthedocs.io/en/stable/)
 - matplotlib
 - numpy
 - pandas
