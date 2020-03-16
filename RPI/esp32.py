@@ -75,7 +75,7 @@ class ESP32():
         if self.connected is True:
             self.conn.send(bytes([HUMIDITY]))
             humidity = float(self.conn.recv(1024))
-            if DEBUG: print("Humidity Received " + str(humidity) + "\n")
+            if DEBUG: print("Humidity Received " + str(humidity) + "%\n")
             self.conn.send(bytes([OK]))
             if DEBUG: print("OK sent\n")
         return humidity

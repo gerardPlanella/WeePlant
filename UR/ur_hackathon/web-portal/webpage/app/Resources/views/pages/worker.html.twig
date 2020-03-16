@@ -1,0 +1,199 @@
+{% extends 'base.html.twig' %}
+
+{% set images = {'María Garcia': 'https://www.wrappixel.com/demos/admin-templates/pixeladmin/plugins/images/users/genu.jpg',
+    'Julia Casas': 'http://www.venmond.com/demo/vendroid/img/avatar/big.jpg',
+    'Ana Eichmann':'https://www.centrofoniatria.it/wp-content/uploads/2017/03/Accordi-Daria_350x450.jpg',
+    'Juan Fernandez':'http://www.innoarea.com/wp-content/uploads/2012/09/john-doe.jpg',
+    'Paco Font':'https://htmlstream.com/preview/unify-v2.6/assets/img-temp/400x450/img5.jpg',
+    'Eusebio Martinez':'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPXEIn4DSj37S1WiYxn_VyIQ2VwPc4L4KQAw6Bco2JxjhQmpWd',
+    'Gabriel':'https://www.component-creator.com/images/testimonials/defaultuser.png'} %}
+
+{% set phone_numbers = {'María Garcia': '(+34) 689 55 88 32',
+    'Julia Casas': '(+34) 689 34 54 34',
+    'Ana Eichmann':'(+34) 689 23 84 76',
+    'Juan Fernandez':'(+34) 689 64 23 87',
+    'Paco Font':'(+34) 689 49 20 39',
+    'Eusebio Martinez':'(+34) 689 19 25 20',
+    'Gabriel': '(+34) 642 75 39 29'} %}
+
+{% set id = {'María Garcia': 'FGH572',
+    'Julia Casas': 'GWS750',
+    'Ana Eichmann':'LWN649',
+    'Juan Fernandez':'HEC573',
+    'Paco Font':'HEF572',
+    'Eusebio Martinez':'LWN649',
+    'Gabriel':'admin'} %}
+
+{% set default_img = "https://www.component-creator.com/images/testimonials/defaultuser.png" %}
+
+{% block body %}
+    <div id="page-wrapper">
+        <div class="container-fluid">
+            <div class="row bg-title">
+                <div class="col-lg-3 col-md-4 col-sm-4 col-xs-12">
+                    <h4 class="page-title">Perfil de {{ name }}</h4>
+                </div>
+            </div>
+            <!-- /.row -->
+            <!-- .row -->
+            <div class="row">
+                <div class="col-md-4 col-xs-12">
+                    <div class="white-box">
+                        <div class="user-bg"> <img width="100%" alt="user" src="https://e00-expansion.uecdn.es/assets/multimedia/imagenes/2016/08/17/14714221296578.jpg">
+                            <div class="overlay-box">
+                                <div class="user-content">
+                                    <a href="javascript:void(0)">
+                                        <img src="{{ images[name] }}" class="thumb-lg img-circle" alt="img">
+                                    </a>
+                                    <h4 class="text-white">{{ name }}</h4>
+                                    <h5 class="text-white">{{ username }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="user-btm-box">
+                            <div class="col-md-12 col-xs-12 text-center">
+                                Identificador <div style="color: #2c5ca9">{{ id[name] }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8 col-xs-12">
+                    <div class="white-box">
+                        <ul class="nav nav-tabs tabs customtab">
+                            <li class="tab">
+                                <a href="#home" data-toggle="tab"> <span class="visible-xs"><i class="fa fa-home"></i></span> <span class="hidden-xs">Actividad</span> </a>
+                            </li>
+                            <li class="active tab">
+                                <a href="#profile" data-toggle="tab"> <span class="visible-xs"><i class="fa fa-user"></i></span> <span class="hidden-xs">Informacion personal</span> </a>
+                            </li>
+                        </ul>
+
+                        {% set time = random(19, 59) %}
+
+                        {% set comments = {
+                            'María Garcia': ['He acabado un ciclo con un tiempo record!','He entrado a la área MFG 2',
+                                'He acabado mi descanso', 'He salido de la área MFG 2'],
+
+                            'Julia Casas': ['He salido de la área MFG 2', 'He entrado a la área MFG 2',
+                                'He salido de la área MFG 3', 'He entrado a la área MFG 3'],
+
+                            'Ana Eichmann': ['He entrado a la área MFG 1', 'He acabado mi descanso',
+                                'He salido de la área MFG 1', 'He empezado mi descanso',],
+
+                            'Juan Fernandez': ['He salido de la fabrica', 'He salido de la área MFG 3',
+                                'He acabado mi turno', 'He acabado un ciclo con un tiempo record!'],
+
+                            'Paco Font': ['He salido de la área MFG 1', 'He entrado a la área MFG 1',
+                                'He salido de la área MFG 2', 'He entrado a la área MFG 2'],
+
+                            'Eusebio Martinez': ['He entrado a la área MFG 1', 'He acabado un ciclo con un tiempo record!',
+                                'He salido de la área MFG 2', 'He entrado a la área MFG 2']
+                        } %}
+
+
+                        <div class="tab-content">
+                            <div class="tab-pane" id="home">
+                                <div class="steamline">
+                                    <div class="sl-item">
+                                        <div class="sl-left">
+                                            <img src="{{ images[name] }}" class="img-circle" alt="img">
+                                        </div>
+                                        <div class="sl-right">
+                                            <div class="m-l-40"><a href="#" class="text-info">{{ name }}</a> <span class="sl-date">Hace {{ time - 18 }} minutos</span>
+                                                <p class="m-t-10">{{ comments[name][0] }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="sl-item">
+                                        <div class="sl-left">
+                                            <img src="{{ images[name] }}" class="img-circle" alt="img">
+                                        </div>
+                                        <div class="sl-right">
+                                            <div class="m-l-40"> <a href="#" class="text-info">{{ name }}</a> <span class="sl-date">Hace {{ time - 13 }} minutos</span>
+                                                <div class="m-t-10">
+                                                    <p class="m-t-10">{{ comments[name][1] }} </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="sl-item">
+                                        <div class="sl-left">
+                                            <img src="{{ images[name] }}" class="img-circle" alt="img">
+                                        </div>
+                                        <div class="sl-right">
+                                            <div class="m-l-40"><a href="#" class="text-info">{{ name }}</a> <span class="sl-date">Hace {{ time - 10 }} minutos</span>
+                                                <p class="m-t-10">{{ comments[name][2] }} </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="sl-item">
+                                        <div class="sl-left">
+                                            <img src="{{ images[name] }}" class="img-circle" alt="img">
+                                        </div>
+                                        <div class="sl-right">
+                                            <div class="m-l-40"> <a href="#" class="text-info">{{ name }}</a> <span class="sl-date">Hace {{ time - 7 }} minutos</span>
+                                                <div class="m-t-10">
+                                                    <p class="m-t-10">{{ comments[name][3] }} </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane active" id="profile">
+                                <div class="row">
+                                    <div class="col-md-3 col-xs-6 b-r"> <strong>Nombre completo</strong>
+                                        <br>
+                                        <p class="text-muted">{{ name }}</p>
+                                    </div>
+                                    <div class="col-md-3 col-xs-6 b-r"> <strong>Telefono</strong>
+                                        <br>
+                                        <p class="text-muted">{{ phone_numbers[name] }}</p>
+                                    </div>
+                                    <div class="col-md-3 col-xs-6 b-r"> <strong>Correo electronico</strong>
+                                        <br>
+                                        <p class="text-muted">{{ username }}@urportal.com</p>
+                                    </div>
+                                    <div class="col-md-3 col-xs-6"> <strong>Residencia</strong>
+                                        <br>
+                                        <p class="text-muted">Barcelona</p>
+                                    </div>
+                                </div>
+                                <hr>
+                                <h4 class="font-bold m-t-30">Skill Set</h4>
+                                <hr>
+                                {% set first = random(1, 100) %}
+                                <h5>Motivación de equipo<span class="pull-right">{{ first }}%</span></h5>
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{ first }}" aria-valuemin="0" aria-valuemax="100" style="width:{{ first }}%;"> <span class="sr-only">{{ first }}% Complete</span> </div>
+                                </div>
+                                {% set second = random(1, 100) %}
+                                <h5>Solución de problemas<span class="pull-right">{{ second }}%</span></h5>
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-custom" role="progressbar" aria-valuenow="{{ second }}" aria-valuemin="0" aria-valuemax="100" style="width:{{ second }}%;"> <span class="sr-only">{{ second }}% Complete</span> </div>
+                                </div>
+                                {% set third = random(1, 100) %}
+                                <h5>Rendimiento<span class="pull-right">{{ third }}%</span></h5>
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-primary" role="progressbar" aria-valuenow="{{ third }}" aria-valuemin="0" aria-valuemax="100" style="width:{{ third }}%;"> <span class="sr-only">{{ third }}% Complete</span> </div>
+                                </div>
+                                {% set forth = random(1, 100) %}
+                                <h5>Problemas causados<span class="pull-right">{{ forth }}%</span></h5>
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="{{ forth }}" aria-valuemin="0" aria-valuemax="100" style="width:{{ forth }}%;"> <span class="sr-only">{{ forth }}% Complete</span> </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.row -->
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

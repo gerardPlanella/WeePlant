@@ -1,0 +1,31 @@
+#! /bin/sh
+# /etc/init.d/ur_hack
+#
+
+# Carry out specific functions when asked to by the system
+case "$1" in
+  start)
+    echo 'Starting ur_hack services...'
+    /etc/init.d/ur_server start
+    sleep 5
+    /etc/init.d/ur_websockets_server start
+    /etc/init.d/alexa_control start
+    /etc/init.d/alexa_action start
+    echo 'Starting firebase (DB) upload service...'
+    /usr/local/bin/python3.7 /root/services/websockets_server/firebase_gatherer.py >> /var/log/firebase_gatherer.log 2>&1 &
+    ;;
+  stop)
+    echo 'Stopping services...'
+    /etc/init.d/alexa_action stop
+    /etc/init.d/alexa_control stop
+    /etc/init.d/ur_websockets_server stop
+    /etc/init.d/ur_server stop
+    pkill -15 -f firebase_gatherer.py
+    ;;
+  *)
+    echo "Usage: /etc/init.d/ur_hack {start|stop}"
+    exit 1
+    ;;
+esac
+
+exit 0

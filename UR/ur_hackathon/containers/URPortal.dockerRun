@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ $# -ne 3 ]; then
+    echo "$ URPortal.dockerRun <absolute-path-to-repository> <mysql-port> <webpage-port>"
+    exit 1
+fi
+
+docker run -it -p ${2}:3306 -p ${3}:8080 -e MYSQL_ROOT_PASSWORD='toor' -v ${1}/web-portal/webpage:/var/www/html  -v ${1}/web-portal/mysql:/var/lib/mysql/ gabrielcammany/ur-portal

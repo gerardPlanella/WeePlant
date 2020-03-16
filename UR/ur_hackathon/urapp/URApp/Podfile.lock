@@ -1,0 +1,72 @@
+PODS:
+  - ApiAI (0.7.2):
+    - ApiAI/AudioFileConverter (= 0.7.2)
+    - ApiAI/Core (= 0.7.2)
+    - ApiAI/Events (= 0.7.2)
+    - ApiAI/ResponseMapping (= 0.7.2)
+    - ApiAI/UIKit (= 0.7.2)
+    - ApiAI/UserEntities (= 0.7.2)
+    - ApiAI/VoiceFileRequest (= 0.7.2)
+    - ApiAI/VoiceRequest (= 0.7.2)
+  - ApiAI/AudioFileConverter (0.7.2):
+    - ApiAI/Core
+  - ApiAI/Core (0.7.2)
+  - ApiAI/Events (0.7.2):
+    - ApiAI/Core
+  - ApiAI/ResponseMapping (0.7.2):
+    - ApiAI/Core
+  - ApiAI/UIKit (0.7.2):
+    - ApiAI/Core
+    - ApiAI/VoiceRequest
+  - ApiAI/UserEntities (0.7.2):
+    - ApiAI/Core
+  - ApiAI/VoiceFileRequest (0.7.2):
+    - ApiAI/Core
+  - ApiAI/VoiceRequest (0.7.2):
+    - ApiAI/Core
+  - ARCharts (0.0.1)
+  - IJProgressView (1.0.0)
+  - Jelly (2.1.0)
+  - LGButton (1.1.1)
+  - SwiftSocket (2.0.2)
+  - Toolbar (0.5.0)
+
+DEPENDENCIES:
+  - ApiAI
+  - ARCharts
+  - IJProgressView (from `https://github.com/Isuru-Nanayakkara/IJProgressView.git`)
+  - Jelly (~> 2.0)
+  - LGButton
+  - SwiftSocket
+  - Toolbar
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - ApiAI
+    - ARCharts
+    - Jelly
+    - LGButton
+    - SwiftSocket
+    - Toolbar
+
+EXTERNAL SOURCES:
+  IJProgressView:
+    :git: https://github.com/Isuru-Nanayakkara/IJProgressView.git
+
+CHECKOUT OPTIONS:
+  IJProgressView:
+    :commit: e59a466c3d65c37be73d3e3b0f9649f4ebbedc17
+    :git: https://github.com/Isuru-Nanayakkara/IJProgressView.git
+
+SPEC CHECKSUMS:
+  ApiAI: d4b49d3736f33ce6f3ef66dc33c0e0fccb23579e
+  ARCharts: f6343f086070da2d5cefd82f29986420a530756a
+  IJProgressView: b004503e6c2d262652dd8537bf55c748265d20e1
+  Jelly: ead99e14abf51130949ea14b2ad9bbfd9047ecbf
+  LGButton: e6ce060e89ffbf9c72fd30139c14865b205f836c
+  SwiftSocket: 6f4c9c63fbc5c1d61188936bb3c599fd546f40ae
+  Toolbar: 240546f9a531266f639b713994b8b9eb7bb3391b
+
+PODFILE CHECKSUM: 457d4b367dd198810d03e98f9ab7d6352a030e3f
+
+COCOAPODS: 1.5.3
