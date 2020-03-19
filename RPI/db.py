@@ -359,7 +359,7 @@ class WeePlantDB():
         cursor.execute("""SELECT plant_id
                             FROM Plant
                             ORDER BY since DESC
-                            LIMIT 1;""", (vars=None)
+                            LIMIT 1;""", vars=None)
 
         resultat = {}
         for row in cursor:
