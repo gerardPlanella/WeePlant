@@ -230,22 +230,19 @@ def getPlantData(path):
     plant = Plant(image_path=path, write_image_output=True, result_path= "./out_plant_debugg/plant_2_info.json", write_result=True)
     plant.calculate()
 
-    ret = {
-        "height": 0,
-        "colour": 0
-    }
+    ret = {"height": 0, "colour": 0}
 
     if plant.isFramed() is True:
         height = plant.getHeight()
 
         if (not (height is not False)):
-            #print("Plant Height: " + str(height) + " pix\n")
-            #print("Plant Width: " + str(width) + " pix\n")
-            return
+            ret["height"] = -1
+            return ret
         else:
             ret["height"] = height
 
-        (red, green, blue) = plant.getColourHistogram()
+        ret["colour"] = [plant.getColourHistogram()[0]["value"], plant.getColourHistogram()[1]["value"], plant.getColourHistogram()[2]["value"]]
+    return ret
 
 def takePicture(plant_id):
     print("moving UR to plant " + str(plant_id))
