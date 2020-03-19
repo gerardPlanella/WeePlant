@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    <link href="{{ asset('css/sweetalert.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <!-- Page Content -->
+        <div id="page-wrapper">
+            <div class="container-fluid">
+                <div class="row bg-title">
+                    <div class="col-lg-3 col-md-4 col-sm-4 col-xs-12">
+                        <h4 class="page-title">Models</h4>
+                    </div>
+                    <!-- /.col-lg-12 -->
+                </div>
+                <!-- .row -->
+                <!-- .row -->
+                <!-- /.row -->
+            </div>
+        </div>
+{% endblock %}
+
+
+{% block scripts %}
+    <script src="{{ asset('js/sweetalert.min.js') }}"></script>
+{% endblock %}

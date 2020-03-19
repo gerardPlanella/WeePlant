@@ -1,9 +1,8 @@
-#!/usr/bin/env python3
-
 # sudo pip3 install pyzbar
 # sudo apt-get install libzbar0
 
 ######################################################
+
 import socket
 import sys
 import os
@@ -28,7 +27,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 QR_TMP = "/tmp/qr_tmp.jpeg"
 
 HOST = '192.168.1.143' 
-PORT = 8003
+PORT = 9000
 
 class ESP32():
     __slots__ = ('sock', 'conn', 'addr', 'port', 'connected')
@@ -76,7 +75,7 @@ class ESP32():
         if self.connected is True:
             self.conn.send(bytes([HUMIDITY]))
             humidity = float(self.conn.recv(1024))
-            if DEBUG: print("Humidity Received " + str(humidity) + "\n")
+            if DEBUG: print("Humidity Received " + str(humidity) + "%\n")
             self.conn.send(bytes([OK]))
             if DEBUG: print("OK sent\n")
         return humidity

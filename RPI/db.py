@@ -162,6 +162,68 @@ class WeePlantDB():
         # Tanquem el cursor
         cursor.close()
 
+    #Afegeix un conjunt de informació falsa per finalitats de testing del sistema
+    def addTestData2(self):
+        # Obtenim l'objecte que permet executar les queries
+        cursor = self.conn.cursor()
+
+        # Creem i executem la query per carregar les plantes de prova
+        queryPlants = "INSERT INTO Plant(name, pot_number, since, watering_time, moisture_threshold, moisture_period, photo_period) VALUES "
+        queryPlants += "('Rafflesia arnoldii', 1, '1999-01-08 04:05:06', 500, .7, 300, 200), "
+        queryPlants += "('Dracaena cinnabari', 2, '1999-01-08 04:05:06', 10, .2, 600, 20);"
+        cursor.execute(queryPlants)
+
+        # Preparem i executem la query per carregar les imatges
+        # Obrim les imatges
+        image1 = open('images/1.jpg', 'rb').read()
+        image2 = open('images/2.jpeg', 'rb').read()
+
+        # Preparem i executem la query
+        queryImages = "INSERT INTO Imatge(time, plant_ID, image, height, colour) VALUES "
+        queryImages += "('1999-01-08 04:05:06', 1, %s, 35, ARRAY[255, 0, 0]),"
+        queryImages += "('1999-01-09 04:05:06', 1, %s, 35, ARRAY[255, 0, 0]),"
+        queryImages += "('1999-01-10 04:05:06', 1, %s, 35, ARRAY[255, 0, 0]),"
+        queryImages += "('1999-01-08 04:05:06', 2, %s, 400, ARRAY[10, 255, 0]);"
+        #cursor.execute(queryImages, (pg.Binary(image1), pg.Binary(image2), pg.Binary(image3), ))
+        cursor.execute(queryImages,(str(base64.b64encode(image1))[2:-1],
+                                    str(base64.b64encode(image2))[2:-1],
+                                    str(base64.b64encode(image1))[2:-1],
+                                    str(base64.b64encode(image2))[2:-1], ))
+
+        # Query per a carregar informació de un log d'humitat
+        queryHumidity = "INSERT INTO Humidity(time, plant_ID, value) VALUES "
+        queryHumidity += "('1999-01-08 04:05:06', 1, .4),"
+
+        # Afegim 100 mostres per a cada planta amb dades aleatories
+        for j in range (2):
+            for i in range(100):
+                hum = random.randint(((10*(j+1))+10), (100 - 10*(j+1))) / 100
+                queryHumidity += "(\'1999-01-08 04:" + str(int(i/60)) + ":" + str(int(i%60)) + "\', " + str(j+1) + ", " + str(hum) + "), "
+        queryHumidity = queryHumidity[:-2] + ";"
+
+        #Executem la query
+        cursor.execute(queryHumidity, vars=None)
+
+        # Query per a carregar informació de un log de reg
+        queryWatering = "INSERT INTO Watering(time, plant_ID, water_applied) VALUES "
+        queryWatering += "('1999-01-08 04:05:06', 1, 3),"
+
+        # Afegim 100 mostres per a cada planta amb dades aleatories
+        for j in range (2):
+            for i in range(100):
+                wat = 40 + op.mod(i, 20)
+                queryWatering += "(\'1999-01-08 04:" + str(int(i/60)) + ":" + str(int(i%60)) + "\', " + str(j+1) + ", " + str(wat) + "), "
+        queryWatering = queryWatering[:-2] + ";"
+
+        #Executem la query
+        cursor.execute(queryWatering, vars=None)
+
+        # Guardem els canvis a la DB
+        self.conn.commit()
+
+        # Tanquem el cursor
+        cursor.close()
+
     # Funció per pintar per pantalla tot el contingut de la taula indicada
     def printTable(self, name):
         # Obtenim l'objecte que permet executar les queries
@@ -291,6 +353,21 @@ class WeePlantDB():
         cursor.close()
         return resultat
 
+    def getLastPK(self):
+        # Obtenim l'objecte que permet executar les queries
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT plant_id
+                            FROM Plant
+                            ORDER BY since DESC
+                            LIMIT 1;""", (vars=None)
+
+        resultat = {}
+        for row in cursor:
+            resultat = int(row[0])
+
+        cursor.close()
+        return resultat
+
     def getImageLastTime(self, id):
         # Obtenim l'objecte que permet executar les queries
         cursor = self.conn.cursor()
@@ -347,8 +424,8 @@ class WeePlantDB():
     def getImages(self, plant_id):
         # Obtenim l'objecte que permet executar les queries
         cursor = self.conn.cursor()
-        
-        
+
+
         cursor.execute("""SELECT image
                             FROM imatge
                             WHERE plant_ID = %s
@@ -356,7 +433,7 @@ class WeePlantDB():
 
         resultat = []
         i = 0
-        
+
         for row in cursor:
             #resultat.append(base64.b64decode(row[0]))
             #open(str(plant_id) + "_" + str(i) + ".jpg", 'wb').write(row[0])
@@ -388,4 +465,4 @@ db.addTestData()
 #db.printTable('humidity')
 db.closeDB()
 
-# 
+#

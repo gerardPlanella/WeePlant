@@ -1,0 +1,68 @@
+http://epcandi.net/newsimages/news_71024_4.jpg
+https://www.criticalmanufacturing.com/uploads/resources/Dashboard%204_20160825174829.png?v67
+https://www.datapine.com/images/dashboard-manufacturing.jpg
+https://proxy.duckduckgo.com/iu/?u=https%3A%2F%2Fi.ytimg.com%2Fvi%2FFuwHtt360kM%2Fmaxresdefault.jpg&f=1
+https://www.simplekpi.com/Content/Images/KPIDashboardExamples/manufacturing-dashboard.jpg
+https://simplekpivm.blob.core.windows.net/blog/Manufacturing-KPI-Dashboard.jpg
+
+The main idea is a factory of mobiles (fuck bottles in the map...), so maybe have the design focused on this?
+
+Dashboard
+    General Information
+    
+    - MTBF general (2) (site traffic)
+    - MTTR general (2) (site traffic)
+    
+    - Cycles (text sol)
+    - Cycle Time (1) (text sol)
+    - Assembly time (text sol)
+    
+    - Units lost (5/6) 
+    - Reason Lost units (5/6) (radar chart, 
+    
+    - Timeline (2)
+        - Issues and others
+        
+
+Workers/Operators
+    - List of workers (with link to worker page)
+    - Status of workers, Performance?
+    - Collaboration with robots
+    - Production Rate per operator (5/6)
+    - Work time
+
+    Per worker page?
+        - Profile
+        - Graphs of historical performance
+        - Graphs of work time
+        - Knowledge or rank
+        - Area working
+        - etc
+    
+Collaboration - Ni puta idea
+    - Stats about robot and human Collaboration, such as amount of cycles or products being assembled
+    by the human and robot?
+    
+Area information
+    - Productivity per area
+    - Production
+    - Issues
+    - Workers (with link to worker page)
+    - Robots as a table? or similar (links to robots, as in the map)
+
+Robots
+    - Production Rate per machine (5/6)
+    - List of robots (with link to personalized robot page)
+    - Stats of robots such as ranking of most productive one, most issues, etc
+    - MTBF and MTTR ranking of all robots
+    - Issues?
+    - Most uptime robot etc
+
+    Per Robot
+        - MTBF - Mean time before failure
+        - MTTR - Mean time to repair
+        - Uptime
+        - Downtime
+        - Temperature
+        - Humidity
+        - Collaboration with humans? (As it is the main objective of the project) Some chart 

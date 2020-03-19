@@ -1,0 +1,147 @@
+{% block navigation %}
+    <div id="wrapper">
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top m-b-0">
+            <div class="navbar-header"><a class="navbar-toggle hidden-sm hidden-md hidden-lg " href="javascript:void(0)"
+                                          data-toggle="collapse" data-target=".navbar-collapse"><i class="ti-menu"></i></a>
+                <div class="top-left-part" style="width: 75px!important;"><a class="logo" href="{{ path('homepage') }}"><b><img
+                                    src="{{ asset('images/logo.png') }}"
+                                    alt="home"/></b></a></div>
+                <a href="{{ path('homepage') }}"> <b style="color: white;font-size: 18px; line-height: 60px">UR Portal laSalle</b> </a>
+
+                <ul class="nav navbar-top-links navbar-right pull-right">
+                    <li class="dropdown">
+                        <a class="dropdown-toggle waves-effect waves-light" data-toggle="dropdown"
+                           href="#" id="notify-bubble">
+                            Avisos <i class="icon-info"></i>
+                            <div class="notify" id="heartbitDiv"></div>
+                        </a>
+                        <ul class="dropdown-menu mailbox animated fadeIn">
+                            <li>
+                                <div class="drop-title" id="number-notifications">Tienes 0 avisos</div>
+                            </li>
+                            <li>
+                                <div class="message-center" id="notification-center">
+                                </div>
+                            </li>
+                            <li>
+                                <a class="text-center" href="{{ path('notifications') }}"> <strong>Ver todos</strong> <i
+                                            class="fa fa-angle-right"></i> </a>
+                            </li>
+                        </ul>
+                        <!-- /.dropdown-messages -->
+                    </li>
+                    <!-- /.dropdown -->
+                    <li class="dropdown"><a class="dropdown-toggle waves-effect waves-light" data-toggle="dropdown"
+                                            href="#"> Rendimiento <i class="icon-graph"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-tasks animated fadeIn">
+                            <li>
+                                <a href="#">
+                                    <div>
+                                        <p><strong>MFG Area 1</strong> <span
+                                                    class="pull-right text-muted">90%</span></p>
+                                        <div class="progress progress-striped active">
+                                            <div class="progress-bar progress-bar-success" role="progressbar"
+                                                 aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"
+                                                 style="width: 90%"><span class="sr-only"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <a href="#">
+                                    <div>
+                                        <p><strong>MFG Area 2</strong> <span
+                                                    class="pull-right text-muted">75%</span></p>
+                                        <div class="progress progress-striped active">
+                                            <div class="progress-bar progress-bar-warning" role="progressbar"
+                                                 aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"
+                                                 style="width: 75%"><span class="sr-only"></span></div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <a href="#">
+                                    <div>
+                                        <p><strong>MFG Area 3</strong> <span
+                                                    class="pull-right text-muted">65%</span></p>
+                                        <div class="progress progress-striped active">
+                                            <div class="progress-bar progress-bar-danger" role="progressbar"
+                                                 aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"
+                                                 style="width: 65%"><span class="sr-only"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <a href="#">
+                                    <div>
+                                        <p><strong>Puesta en linea</strong> <span
+                                                    class="pull-right text-muted">80%</span></p>
+                                        <div class="progress progress-striped active">
+                                            <div class="progress-bar progress-bar-success" role="progressbar"
+                                                 aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"
+                                                 style="width: 80%"><span class="sr-only"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <a class="text-center" href="#"> <strong>Reportar un aviso</strong> <i
+                                            class="fa fa-angle-right"></i> </a>
+                            </li>
+                        </ul>
+                        <!-- /.dropdown-tasks -->
+                    </li>
+                    <!-- /.dropdown -->
+                    <li class="dropdown">
+                        <a class="dropdown-toggle profile-pic" data-toggle="dropdown" href="#"> <img
+                                    src="https://www.component-creator.com/images/testimonials/defaultuser.png"
+                                    alt="user-img" width="36" class="img-circle"><b
+                                    class="hidden-xs">{{ app.user.username }}</b> </a>
+                        <ul class="dropdown-menu dropdown-user animated flipInY">
+                            <li><a href="{{ path('worker', {'name' : 'Gabriel' }) }}"><i class="ti-user"></i> My Perfil</a></li>
+                            <li><a href="{{ path('mailbox') }}"><i class="ti-email"></i> Mis mensajes</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="{{ path('logout') }}"><i class="fa fa-power-off"></i> Desconnectarse</a></li>
+                        </ul>
+                        <!-- /.dropdown-user -->
+                    </li>
+                    <!-- /.dropdown -->
+                </ul>
+            </div>
+        </nav>
+        <!-- Left navbar-header -->
+        <div class="navbar-default sidebar" role="navigation" style="
+    -webkit-box-shadow: 0px 0px 15px -4px rgba(0,0,0,0.75);
+    -moz-box-shadow: 0px 0px 15px -4px rgba(0,0,0,0.75);
+    box-shadow: 0px 0px 15px -4px rgba(0,0,0,0.75)">
+            <div class="sidebar-nav navbar-collapse slimscrollsidebar">
+                <ul class="nav" id="side-menu">
+                    <li><a href="{{ path('dashboard') }}" class="waves-effect"><i class="linea-icon linea-basic fa-fw"
+                                                                                  data-icon="v"></i> <span
+                                    class="hide-menu">Panel general</span></a></li>
+                    <li><a href="{{ path('map') }}" class="waves-effect"><i class="linea-icon linea-basic fa-fw"
+                                                                            data-icon="v"></i><span class="hide-menu">Planta<span
+                                        class="fa arrow"></span></span></a></li>
+                    <li><a href="{{ path('workers') }}" class="waves-effect"><i
+                                    class="linea-icon linea-basic fa-fw" data-icon="v"></i> <span class="hide-menu">Trabajadores</span></a>
+                    </li>
+                    <li><a href="{{ path('robots') }}" class="waves-effect"><i
+                                    class="linea-icon linea-basic fa-fw" data-icon="v"></i> <span class="hide-menu">Robots</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- Left navbar-header end -->
+    </div>
+{% endblock %}

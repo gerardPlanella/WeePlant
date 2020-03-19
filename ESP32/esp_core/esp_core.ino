@@ -6,6 +6,7 @@
 #include "soc/rtc_cntl_reg.h"  // Disable brownour problems
 #include "driver/rtc_io.h"
 
+//#define HOME
 #define DEBUG
 
 #ifdef DEBUG
@@ -21,7 +22,6 @@
 
 #define CAMERA_MODEL_AI_THINKER
 
-#define HOME
 
 // Pin definition for CAMERA_MODEL_AI_THINKER
 #define PWDN_GPIO_NUM     32
@@ -52,7 +52,7 @@
 
 #ifdef HOME
 /*const char *SSID = "MOVISTAR_8182";
-const char* WiFiPassword = "jwF4292858Pv25hQ332X";
+  const char* WiFiPassword = "jwF4292858Pv25hQ332X";
 */
 const char *SSID = "MOVISTAR_34A8";
 const char* WiFiPassword = "YNwzM7Ks7AE49FN4zEzz";
@@ -62,8 +62,8 @@ const char* WiFiPassword = "ur_hack_la_salle";
 #endif
 
 
-const uint16_t port = 9000;
-const char * host = "192.168.1.39";
+const uint16_t port = 9008;
+const char * host = "192.168.1.148";
 
 const float ADC_MULTIPLIER = 0.1875F; /* ADS1115  @ +/- 6.144V gain (16-bit results) */
 const float HUMIDITY_CONVERSION = 10.0F;
@@ -75,7 +75,8 @@ int takePicture(camera_fb_t **);
 int sendImage(WiFiClient, camera_fb_t * );
 int sendHumidity(WiFiClient, float);
 int16_t readADC();
-int adc2hum(int16_t);
+float adc2hum(float volts);
+float hum2adc(float hum);
 
 
 WiFiClient client;
@@ -87,7 +88,7 @@ void setup() {
   Serial.begin(9600);
 
   pinMode(LED_PIN, OUTPUT);
-  
+
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
@@ -108,9 +109,9 @@ void setup() {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
-  config.pixel_format = PIXFORMAT_JPEG; 
-  
-  if(psramFound()){
+  config.pixel_format = PIXFORMAT_JPEG;
+
+  if (psramFound()) {
     config.frame_size = FRAMESIZE_UXGA; // FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
     config.jpeg_quality = 10;
     config.fb_count = 2;
@@ -119,7 +120,7 @@ void setup() {
     config.jpeg_quality = 12;
     config.fb_count = 1;
   }
-  
+
   // Init Camera
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
@@ -127,10 +128,11 @@ void setup() {
     return;
   }
 
-  
+
   connectWiFi();
-  while(connectToHost() < 0){
+  while (connectToHost() < 0) {
     delay(100);
+    PRINTLN("Waiting for Server");
   }
 
   //ADS Setup
@@ -145,168 +147,202 @@ void setup() {
 
 
 void loop() {
-  int16_t adc_value = 0;
-  float humidity = 0;
+  int16_t adc_value = 0.0;
+  float humidity = 0.0, volts = 0.0;
   int i = 0;
   camera_fb_t *fb = NULL;
-  bool toggle = false;
   char data_read[MAXC];
   int option;
 
- /* for(i = 0; i < 10; i++){
-    digitalWrite(LED_PIN, toggle);
-    toggle = !toggle;
-    adc_Value = readADC();
-    PRINT("("); PRINT(adc_Value * ADC_MULTIPLIER); PRINTLN("mV)");
-    delay(500);
-  }
+  /* for(i = 0; i < 10; i++){
+     digitalWrite(LED_PIN, toggle);
+     toggle = !toggle;
+     adc_Value = readADC();
+     PRINT("("); PRINT(adc_Value * ADC_MULTIPLIER); PRINTLN("mV)");
+     delay(500);
+    }
   */
-   
-  for(;;){
-    i = 0;   
-    while(client.available()){
+
+  for (;;) {
+    i = 0;
+    while (client.available()) {
       data_read[i++] = client.read();
       PRINTF("Reading %d\n", data_read[0]);
-      
     }
-    option = (int)data_read[0];
-    if(i > 0){
-      switch(option){
-  
+    if (i > 0) {
+      option = (int)data_read[0];
+      switch (option) {
+
         case 1: //IMAGE
-          if(takePicture(&fb) < 0){
+          if (takePicture(&fb) < 0) {
             PRINTLN("[ERROR] Taking Picture");
-          }else{
-            if(sendImage(client, fb) < 0){
+          } else {
+            if (sendImage(client, fb) < 0) {
               PRINTLN("[ERROR] Sending Image");
             }
             esp_camera_fb_return(fb);
           }
           break;
-  
+
         case 2: //HUMIDITY
           adc_value = readADC();
-          humidity = adc_value * ADC_MULTIPLIER / 1000;
-          PRINT("("); PRINT(humidity); PRINTLN("V)");
-          if(adc_value <= 0){
+          volts = adc_value * ADC_MULTIPLIER / 1000;
+          humidity = adc2hum(volts);
+          PRINT("("); PRINT(humidity); PRINTLN("%)");
+          if (adc_value <= 0) {
             PRINTLN("[ERROR] ADC Value");
-          }else{
-            if(sendHumidity(client, humidity) < 0){
+          } else {
+            if (sendHumidity(client, humidity) < 0) {
               PRINTLN("[ERROR] Sending Humidity");
             }
           }
           break;
-  
+
         case 3: //EXIT
           PRINTLN("Exit request.");
-          disconnectWiFi(); 
+          disconnectWiFi();
           esp_deep_sleep_start();
           break;
-  
+
         default:
           PRINTF("[ERROR] Wrong Option %d.", option);
           break;
       }
-    } 
+      client.flush();
+    }
     PRINT("Waiting\n");
     delay(1000);
   }
   disconnectWiFi();
-  for(;;);
+  for (;;);
 }
 
 
-void disconnectWiFi(){
+void disconnectWiFi() {
   client.stop();
   WiFi.disconnect();
   PRINTLN("WiFi Disconnected.");
 }
 
 
-int connectWiFi(){
+int connectWiFi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(SSID, WiFiPassword);
   PRINT("Connecting to "); PRINTLN(SSID);
- 
+
   uint8_t i = 0;
   while (WiFi.status() != WL_CONNECTED)
   {
     PRINT('.');
     delay(500);
- 
+
     if ((++i % 16) == 0)
     {
       PRINTLN(F(" still trying to connect"));
     }
   }
- 
+
   PRINT("Connected. My IP address is: ");
   PRINTLN(WiFi.localIP());
   return 0;
 }
 
-int connectToHost(){
+int connectToHost() {
   if (!client.connect(host, port)) {
     return -1;
-  }else{
+  } else {
     PRINT("Connected to host\n")
   }
   return 0;
 }
 
-int takePicture(camera_fb_t ** fb){
-    *fb = esp_camera_fb_get(); 
-    if (!(*fb)) return -1;
-    return 0;
-}
-
-int sendImage(WiFiClient client, camera_fb_t * fb){
-  size_t length = 0;
-  int ok = 0;
-
-  
-  PRINT("Length to send: ");
-  PRINTLN(fb->len);
-
-  do{
-    client.print(fb->len);
-    length = client.write(fb->buf, fb->len);
-    if(length >= fb->len){
-      while(client.available() <= 0){
-        delay(100);
-      }
-      ok = client.read();
-    }else{
-      PRINT("Length sent: ");
-      PRINTLN(length);
-      return -1;
-    }
-  }while(ok == 0);
-
-  
+int takePicture(camera_fb_t ** fb) {
+  *fb = esp_camera_fb_get();
+  if (!(*fb)) return -1;
   return 0;
 }
 
-int sendHumidity(WiFiClient client, float hum){
+int sendImage(WiFiClient client, camera_fb_t * fb) {
+  size_t length = 0;
+  int ok = 0;
+
+
+  PRINT("Length to send: ");
+  PRINTLN(fb->len);
+
+  do {
+    client.print(fb->len);
+    while (client.available() <= 0) {
+      delay(100);
+    }
+    ok = client.read();
+    length = client.write(fb->buf, fb->len);
+    if (length >= fb->len) {
+      while (client.available() <= 0) {
+        delay(100);
+      }
+      ok = client.read();
+    } else {
+      PRINT("[ERROR]Length sent: ");
+      PRINTLN(length);
+      return -1;
+    }
+  } while (ok == 0);
+
+
+  return 0;
+}
+
+int sendHumidity(WiFiClient client, float hum) {
   char ok = 0;
   char msg[MAXC];
 
   sprintf(msg, "%f", hum);
   PRINT("Message to send: ");
   PRINTLN(msg);
-  
 
-  do{
+
+  do {
     client.print(msg);
-    while(client.available() <= 0){
-      delay(100);
+    while (client.available() <= 0) {
+      delay(100);  
     }
     ok = client.read();
-  }while(ok != 1);
-  
+  } while (ok != 1);
+
   return 0;
 }
 
-int16_t readADC(){
-  return ads.readADC_Differential_0_1();    
+float adc2hum(float volts){
+  float hum;
+  
+  if(volts < 0) volts*=-1;
+  
+  if(volts < 1.256){
+    hum = -260.87*volts + 360.87;
+  }else{
+    hum = -8.9*volts + 44.3;
+  }
+
+  return hum;
+}
+
+float hum2adc(float hum){
+  float volts;
+
+  if(hum > 0 || hum > 100){
+    return -1;
+  }
+  
+  if(hum > 33.1){
+    volts = (hum - 360.87)/(-260.87);
+  }else{
+    volts = (hum - 44.3)/(-8.9);
+  }
+
+  return volts;
+}
+
+int16_t readADC() {
+  return ads.readADC_Differential_0_1();
 }

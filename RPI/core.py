@@ -10,6 +10,7 @@ import db as database
 import time
 import datetime
 import esp32
+import plant
 #from gpiozero import OutputDevice
 
 sio = socketio.Client()
@@ -81,6 +82,7 @@ def on_message(data):
 
     noplant = False
 
+    sio.emit('QRReading', db.getLastPK())
     return
 
 @sio.event
@@ -92,15 +94,32 @@ def disconnect():
     print('disconnected from server')
 
 #TODO: fer la funció a partir del string generat pel QR
+"""Exemple: http://www.weeplant.es:80/?name=deictics_plant&pot_number=404&watering_time=10&moisture_threshold=.2&moisture_period=60&photo_period=500"""
 def decodeQR(code):
+    code = code.split("?")[1]
+    attributesAux = code.split("&")
+    attributes = []
+
+    for a in attributesAux:
+        aux = a.split("=")
+
+        try:
+            aux[1] = int(aux[1])
+        except:
+            try:
+                aux[1] = float(aux[1])
+            except:
+                """"""
+        attributes.append([aux[0], aux[1]])
+
     return {
-        "name": "deictics plant",
-        "pot_number": 404,
+        "name": attributes[0][1],
+        "pot_number": attributes[1][1],
         "since": "'" + str(datetime.datetime.now()) + "'",
-        "watering_time": 10,
-        "moisture_threshold": .2,
-        "moisture_period": 60,
-        "photo_period": 500
+        "watering_time": attributes[2][1],
+        "moisture_threshold": attributes[3][1],
+        "moisture_period": attributes[4][1],
+        "photo_period": attributes[5][1]
     }
 
 def requestTimings(db):
@@ -207,6 +226,27 @@ def doMeasure(plant_id):
         print("UR leave the tool")
 
     return
+
+def getPlantData(path):
+    plant = Plant(image_path=path, write_image_output=True, result_path= "./out_plant_debugg/plant_2_info.json", write_result=True)
+    plant.calculate()
+
+    ret = {
+        "height": 0,
+        "colour": 0
+    }
+
+    if plant.isFramed() is True:
+        height = plant.getHeight()
+
+        if (not (height is not False)):
+            #print("Plant Height: " + str(height) + " pix\n")
+            #print("Plant Width: " + str(width) + " pix\n")
+            return
+        else:
+            ret["height"] = height
+
+        (red, green, blue) = plant.getColourHistogram()
 
 def takePicture(plant_id):
     print("moving UR to plant " + str(plant_id))
