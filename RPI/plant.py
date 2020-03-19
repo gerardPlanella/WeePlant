@@ -182,7 +182,7 @@ def getPlantData(path):
         ret["colour"] = plant.getColourHistogram()
     return ret
 
-print(getPlantData("/images/2.jpeg"))
+#print(getPlantData("/images/2.jpeg"))
 
 """
 
