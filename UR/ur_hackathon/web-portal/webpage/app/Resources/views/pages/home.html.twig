@@ -1,0 +1,229 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    <!-- Timeline CSS -->
+    <link href="{{ asset('css/horizontal-timeline.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+        <div id="page-wrapper">
+        <div class="container-fluid">
+            <!-- /.row -->
+            <div class="row" style="margin-top: 20px">
+                <div class="col-md-3 col-sm-3 col-xs-12">
+                    <div class="white-box">
+                        <h3 class="box-title">Ciclos</h3>
+                        <ul class="list-inline two-part">
+                            <li><i class="icon-chart text-success"></i></li>
+                            <li class="text-right"><span class="counter" id="updateCiclos">43</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-3 col-xs-12">
+                    <div class="white-box">
+                        <h3 class="box-title">Tiempo por ciclo <span class="text-muted" style="opacity: 0.5;">en segundos</span></h3>
+                        <ul class="list-inline two-part">
+                            <li><i class="icon-hourglass text-info"></i></li>
+                            <li class="text-right"><span class="counter" id="updateTiempoCiclo">78</span></li>
+                        </ul>
+                    </div>
+
+                </div>
+                <div class="col-md-3 col-sm-3 col-xs-12">
+                    <div class="white-box">
+                        <h3 class="box-title">Montajes</h3>
+                        <ul class="list-inline two-part">
+                            <li><i class="icon-chart text-success"></i></li>
+                            <li class="text-right"><span class="counter" id="updateMontajes">123</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-3 col-xs-12">
+                    <div class="white-box">
+                        <h3 class="box-title">Tiempo de montaje <span class="text-muted" style="opacity: 0.5;">en segundos</span></h3>
+                        <ul class="list-inline two-part">
+                            <li><i class="icon-hourglass text-info"></i></li>
+                            <li class="text-right"><span class="counter" id="updateMontaje">12</span></li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+            <!--row -->
+            <div class="row">
+                <div class="col-md-4 col-sm-12 col-xs-12">
+                    <div class="white-box">
+                        <h3 class="box-title"><small class="pull-right m-t-10 text-success"><i class="fa fa-sort-asc"></i> 18% Respecto el mes anterior</small>MTBF</h3>
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <h6>Global</h6>
+                                <b>80h</b></div>
+                            <div class="stat-item">
+                                <h6>Mensual</h6>
+                                <b>15h</b></div>
+                            <div class="stat-item">
+                                <h6>Diaria</h6>
+                                <b>5h</b></div>
+                        </div>
+                        <div id="sparkline8"><canvas style="display: inline-block; width: 403px; height: 50px; vertical-align: top;" width="403" height="50"></canvas></div>
+                    </div>
+
+
+                    <div class="white-box">
+                        <h3 class="box-title"><small class="pull-right m-t-10 text-danger"><i class="fa fa-sort-desc"></i> 22% Respecto el mes anterior</small>MTTR</h3>
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <h6>Global</h6>
+                                <b>58min</b></div>
+                            <div class="stat-item">
+                                <h6>Mensual</h6>
+                                <b>45min</b></div>
+                            <div class="stat-item">
+                                <h6>Diaria</h6>
+                                <b>25min</b></div>
+                        </div>
+                        <div id="sparkline9"><canvas style="display: inline-block; width: 403px; height: 50px; vertical-align: top;" width="403" height="50"></canvas></div>
+                    </div>
+
+                </div>
+                <div class="col-md-4 col-sm-12 col-xs-12">
+                    <div class="white-box">
+                        <h3 class="box-title">Mejores Robots</h3>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>ID Robot</th>
+                                    <th>Productividad</th>
+                                    <th>Crecimiento</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>WG758</td>
+                                    <td><span class="peity-line" data-peity="{ &quot;fill&quot;: [&quot;#13dafe&quot;], &quot;stroke&quot;:[&quot;#13dafe&quot;],&quot;height&quot;:40,&quot;width&quot;:120}" data-height="40" style="display: none">0,6,1,3,5,9,3,5,9,2</span></td>
+                                    <td><span class="text-danger text-semibold"><i class="fa fa-level-down" aria-hidden="true"></i> 28.76%</span> </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>KD104</td>
+                                    <td><span class="peity-line" data-width="120" data-peity="{ &quot;fill&quot;: [&quot;#13dafe&quot;], &quot;stroke&quot;:[&quot;#13dafe&quot;],&quot;height&quot;:40,&quot;width&quot;:120}" data-height="40" style="display: none;">0,1,2,4,5,9,8,9,6,6</span></td>
+                                    <td><span class="text-warning text-semibold"><i class="fa fa-level-down" aria-hidden="true"></i> 8.55%</span> </td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>PD42O</td>
+                                    <td><span class="peity-line" data-width="120" data-peity="{ &quot;fill&quot;: [&quot;#13dafe&quot;], &quot;stroke&quot;:[&quot;#13dafe&quot;],&quot;height&quot;:40,&quot;width&quot;:120}" data-height="40" style="display: none;">0,4,6,4,2,4,3,3,4,2</span></td>
+                                    <td><span class="text-success text-semibold"><i class="fa fa-level-up" aria-hidden="true"></i> 58.56%</span> </td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>LF573</td>
+                                    <td><span class="peity-line" data-width="120" data-peity="{ &quot;fill&quot;: [&quot;#13dafe&quot;], &quot;stroke&quot;:[&quot;#13dafe&quot;],&quot;height&quot;:40,&quot;width&quot;:120}" data-height="40" style="display: none;">0,3,6,4,5,4,7,3,4,2</span></td>
+                                    <td><span class="text-info text-semibold"><i class="fa fa-level-up" aria-hidden="true"></i> 35.76%</span> </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-12 col-xs-12">
+
+                    <div class="white-box">
+                        <h3 class="box-title">Mejores Trabajadores</h3>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Trabajador/a</th>
+                                    <th>Productividad</th>
+                                    <th>Ventas</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Maria García</td>
+                                    <td><span class="peity-line" data-width="120" data-peity="{ &quot;fill&quot;: [&quot;#13dafe&quot;], &quot;stroke&quot;:[&quot;#13dafe&quot;],&quot;height&quot;:40,&quot;width&quot;:120}" data-height="40" style="display: none;">0,3,4,5,8,3,4,5,3,1</span></td>
+                                    <td><span class="text-danger text-semibold"><i class="fa fa-level-down" aria-hidden="true"></i> 28.76%</span> </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Juan Fernandez</td>
+                                    <td><span class="peity-line" data-width="120" data-peity="{ &quot;fill&quot;: [&quot;#13dafe&quot;], &quot;stroke&quot;:[&quot;#13dafe&quot;],&quot;height&quot;:40,&quot;width&quot;:120}" data-height="40" style="display: none;">0,1,1,2,3,1,2,3,1,2</span></td>
+                                    <td><span class="text-warning text-semibold"><i class="fa fa-level-down" aria-hidden="true"></i> 8.55%</span> </td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>Julia Casas</td>
+                                    <td><span class="peity-line" data-width="120" data-peity="{ &quot;fill&quot;: [&quot;#13dafe&quot;], &quot;stroke&quot;:[&quot;#13dafe&quot;],&quot;height&quot;:40,&quot;width&quot;:120}" data-height="40" style="display: none;">0,3,6,1,4,4,2,9,2,1</span></td>
+                                    <td><span class="text-success text-semibold"><i class="fa fa-level-up" aria-hidden="true"></i> 58.56%</span> </td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>Eusebio Martinez</td>
+                                    <td><span class="peity-line" data-width="120" data-peity="{ &quot;fill&quot;: [&quot;#13dafe&quot;], &quot;stroke&quot;:[&quot;#13dafe&quot;],&quot;height&quot;:40,&quot;width&quot;:120}" data-height="40" style="display: none;">0,3,6,4,5,4,7,3,4,2</span></td>
+                                    <td><span class="text-info text-semibold"><i class="fa fa-level-up" aria-hidden="true"></i> 35.76%</span> </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+            <!-- row -->
+            <div class="row">
+                <div class="col-md-6 col-sm-12 col-xs-12">
+                    <div class="white-box">
+                        <h3 class="box-title">Unidades Perdidas</h3>
+                        <div class="chart-container" style="text-align: center;">
+                            <canvas id="problemsPie3" width="100" height="580"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-sm-12 col-xs-122">
+                    <div class="white-box">
+                        <h3 class="box-title">Razones Unidades Perdidas</h3>
+                        <div class="row">
+                            <div class="col-lg-6 col-sm-6 col-xs-12">
+                                <h5>Producto K42</h5>
+                                <div class="chart-container" style="text-align: center">
+                                    <canvas id="problemsPie" width="400" height="400"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-sm-6 col-xs-12">
+                                <h5>Producto K72</h5>
+                                <div class="chart-container" style="text-align: center">
+                                    <canvas id="problemsPie2" width="400" height="400"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="white-box">
+                        <div class="row">
+                            <span class="label pull-left" style="background-color: #00c292">Ensamblaje:</span> <div class="pull-right ">Error causado por culpa de la línea de ensamblaje no sincronizada</div> <br>
+                            <span class="label pull-left" style="background-color: #f75b36"> Robot:</span> <div class="pull-right">Problema a causa del malfuncionamiento del robot</div> <br>
+                            <span class="label pull-left" style="background-color: #6164c1">Humano:</span> <div class="pull-right">Error causado por el trabajador humano asociado al robot</div> <br>
+                            <span class="label pull-left" style="background-color: #99d683">Orden:</span> <div class="pull-right">Problema a causa de un mal orden en los elementos de ensamblaje</div> <br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.row -->
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ asset('js/Chart.min.js') }}"></script>
+    <script src="{{ asset('js/horizontal-timeline.js') }}"></script>
+    <script src="{{ asset('js/jquery.canvasjs.min.js') }}"></script>
+    <script src="{{ asset('js/custom/home.js') }}"></script>
+    <script src="{{ asset('js/jquery.peity.js') }}"></script>
+    <script>$(".peity-line").peity("line")</script>
+{% endblock %}

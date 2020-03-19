@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css"/>
+    <link type="text/css" rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css"/>
+{% endblock %}
+
+{% block body %}
+    <div id="page-wrapper">
+        <div class="container-fluid">
+            <div class="white-box">
+
+                <section>
+                    <div class="sttabs tabs-style-line">
+                        <nav>
+                            <ul>
+                                <li class="tab-current"><a href="#section-bar-1" class="sticon"><span>Lista de Incidencias</span></a>
+                                </li>
+                                <li class=""><a href="#section-bar-2"
+                                                class="sticon"><span>Estadísticas</span></a></li>
+                            </ul>
+                        </nav>
+                        <div class="content-wrap">
+                            <section id="section-bar-1" class="content-current">
+                                <div class="white-box">
+                                    <div id="jsGrid"></div>
+                                </div>
+                            </section>
+                            <section id="section-bar-2" class="">
+                                <div class="white-box">
+                                    <div class="chart-container" style="text-align: center">
+                                        <canvas id="notificationChart" width="1200" height="500"></canvas>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                        <!-- /content -->
+                    </div>
+                    <!-- /tabs -->
+                </section>
+
+            </div>
+        </div>
+        <!-- /#page-wrapper -->
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+    <script src="{{ asset('js/jquery.canvasjs.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/custom/issues.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/cbpFWTabs.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/custom/notificationChart.js') }}"></script>
+    <script>
+        (function () {
+
+            [].slice.call(document.querySelectorAll('.sttabs')).forEach(function (el) {
+                new CBPFWTabs(el);
+            });
+
+        })();
+    </script>
+{% endblock %}

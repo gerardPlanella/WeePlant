@@ -75,7 +75,8 @@ int takePicture(camera_fb_t **);
 int sendImage(WiFiClient, camera_fb_t * );
 int sendHumidity(WiFiClient, float);
 int16_t readADC();
-int adc2hum(int16_t);
+float adc2hum(float volts);
+float hum2adc(float hum);
 
 
 WiFiClient client;
@@ -146,8 +147,8 @@ void setup() {
 
 
 void loop() {
-  int16_t adc_value = 0;
-  float humidity = 0;
+  int16_t adc_value = 0.0;
+  float humidity = 0.0, volts = 0.0;
   int i = 0;
   camera_fb_t *fb = NULL;
   char data_read[MAXC];
@@ -185,8 +186,9 @@ void loop() {
 
         case 2: //HUMIDITY
           adc_value = readADC();
-          humidity = adc_value * ADC_MULTIPLIER / 1000;
-          PRINT("("); PRINT(humidity); PRINTLN("V)");
+          volts = adc_value * ADC_MULTIPLIER / 1000;
+          humidity = adc2hum(volts);
+          PRINT("("); PRINT(humidity); PRINTLN("%)");
           if (adc_value <= 0) {
             PRINTLN("[ERROR] ADC Value");
           } else {
@@ -303,12 +305,42 @@ int sendHumidity(WiFiClient client, float hum) {
   do {
     client.print(msg);
     while (client.available() <= 0) {
-      delay(100);
+      delay(100);  
     }
     ok = client.read();
   } while (ok != 1);
 
   return 0;
+}
+
+float adc2hum(float volts){
+  float hum;
+  
+  if(volts < 0) volts*=-1;
+  
+  if(volts < 1.256){
+    hum = -260.87*volts + 360.87;
+  }else{
+    hum = -8.9*volts + 44.3;
+  }
+
+  return hum;
+}
+
+float hum2adc(float hum){
+  float volts;
+
+  if(hum > 0 || hum > 100){
+    return -1;
+  }
+  
+  if(hum > 33.1){
+    volts = (hum - 360.87)/(-260.87);
+  }else{
+    volts = (hum - 44.3)/(-8.9);
+  }
+
+  return volts;
 }
 
 int16_t readADC() {

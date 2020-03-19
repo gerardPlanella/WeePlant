@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div id="page-wrapper">
+        <div class="container-fluid">
+            <div class="row bg-title">
+                <div class="col-lg-3 col-md-4 col-sm-4 col-xs-12">
+                    <h4 class="page-title">Información de los trabajadores</h4>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+
+            <!-- ROW TEXT INFO-->
+            <div class="white-box">
+                <h3 class="box-title">Lista de trabajadores</h3>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nombre</th>
+                            <th>Primer apellido</th>
+                            <th>Identificador Trabajador</th>
+                            <th>Sección</th>
+                            <th>Perfil</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>María</td>
+                            <td>Garcia</td>
+                            <td>FGH572</td>
+                            <td><span class="label label-danger">Entrada</span></td>
+                            <td><a href="{{ path('worker', {'name' : 'María Garcia'}) }}"><span class="label label-info">Ver</span></a></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Juan</td>
+                            <td>Fernandez</td>
+                            <td>HEC573</td>
+                            <td><span class="label label-info">MFG2</span></td>
+                            <td><a href="{{ path('worker', {'name' : 'Juan Fernandez'}) }}"><span class="label label-info">Ver</span></a></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Julia</td>
+                            <td>Casas</td>
+                            <td>GWS750</td>
+                            <td><span class="label label-warning">MFG3</span></td>
+                            <td><a href="{{ path('worker', {'name' : 'Julia Casas'}) }}"><span class="label label-info">Ver</span></a></td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>Eusebio</td>
+                            <td>Martinez</td>
+                            <td>HEF572</td>
+                            <td><span class="label label-success">MFG1</span></td>
+                            <td><a href="{{ path('worker', {'name' : 'Eusebio Martinez'}) }}"><span class="label label-info">Ver</span></a></td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Paco</td>
+                            <td>Font</td>
+                            <td>NEO749</td>
+                            <td><span class="label label-info">MFG2</span></td>
+                            <td><a href="{{ path('worker', {'name' : 'Paco Font'}) }}"><span class="label label-info">Ver</span></a></td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>Ana</td>
+                            <td>Eichmann</td>
+                            <td>LWN649</td>
+                            <td><span class="label label-success">MFG1</span></td>
+                            <td><a href="{{ path('worker', {'name' : 'Ana Eichmann'}) }}"><span class="label label-info">Ver</span></a></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- /#page-wrapper -->
+    </div>
+{% endblock %}
+
+{% block scripts %}{% endblock %}

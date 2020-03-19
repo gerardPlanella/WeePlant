@@ -1,0 +1,22 @@
+api-server/.idea/*
+urcap/.idea/*
+venv
+target
+*.iml
+goContainer
+# Ignore macOS Finder user-related files
+.DS_Store
+# Ignore Xcode user-related files
+xcuserdata/
+# Ignore AppCode user-related files
+.idea/
+# Ignore CocoaPods installed files
+Pods/
+# Ignore Carthage installed files
+Carthage/vendor/
+
+# web ignore
+web-portal/webpage/vendor/
+web-portal/webpage/var/
+web-portal/webpage/tests/
+web-portal/mysql

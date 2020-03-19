@@ -15,7 +15,8 @@ import plant
 
 sio = socketio.Client()
 db = database.WeePlantDB()
-#esp = esp32.ESP32()
+
+#esp = esp32.ESP32("192.168.1.148",9008  )
 
 running = True
 noplant = True
@@ -251,9 +252,11 @@ def takePicture(plant_id):
     esp.getImage("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
 
     ## TODO:
-    info = getPlantData()
+    #info = getPlantData()
 
-    db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
+    #db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
+    
+    db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg",'rb').read(),5,[233,222,222])
 
     return
 
@@ -282,6 +285,20 @@ if __name__ == '__main__':
     sio.connect('http://localhost:2000')
 
     #main()
+
+    """
+    if esp.connect() is True:
+
+        while True:
+            print("TAKE PICTURE CALL")
+            takePicture(1)
+            
+            time.sleep(3)
+    else:
+        print("Not connected.")
+
+    """
+    
     sio.wait()
 
     #ur = UR("192.168.1.104")
