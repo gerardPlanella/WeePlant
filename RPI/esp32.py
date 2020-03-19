@@ -91,6 +91,7 @@ class ESP32():
             img_len = int(self.conn.recv(1024))
             if DEBUG: print("Img Length " + str(img_len) + "\n")
             end = img_len
+            self.conn.send(bytes([OK]))
 
             while start != end :
                 if int((end - start)/BURST_SIZE) > 0 : 
@@ -100,7 +101,7 @@ class ESP32():
                 
                 start += len(bytes_read)
                 img_bytes += bytes_read
-                #if DEBUG: print("Packet Read: " + str(start) + "/" + str(end) + "\n")
+                if DEBUG: print("Packet Read: " + str(start) + "/" + str(end) + "\n")
 
             if DEBUG: print("Image Read \n")
             self.conn.send(bytes([OK]))

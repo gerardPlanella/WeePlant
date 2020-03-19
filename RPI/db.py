@@ -370,8 +370,9 @@ class WeePlantDB():
         # Obtenim l'objecte que permet executar les queries
         cursor = self.conn.cursor()
         cursor.execute("""INSERT INTO Imatge (time, plant_ID, image, height, colour) VALUES
-                            (%s, %s, %s, %s, ARRAY%s)""",
-                            (str(time), str(plant_id), base64.b64encode(image), str(height), str(colour)))
+                            (%s, %s, %s, %s, ARRAY[0, 200, 30])""",
+                            (str(time), str(plant_id),
+                            str( base64.b64encode(image))[2:-1], str(height)))
         self.conn.commit()
         cursor.close()
 

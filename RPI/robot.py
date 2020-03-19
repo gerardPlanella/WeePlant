@@ -5,6 +5,8 @@ import math as m
 
 DEBUG = False
 
+#192.168.1.104
+
 ROBOT_STATUS_BITS = "robot_status_bits"
 ROBOT_JOINT_POSITIONS = "get_all_joint_positions"
 
@@ -112,3 +114,12 @@ class UR():
 		else:
 			script.close_gripper(self.address, GRIPPER_PIN)
 		time.sleep(1)
+
+
+
+
+#if __name__ == '__main__':
+
+    #ur = UR("192.168.1.104")
+    #print(ur.get_actual_joint_positions())
+    #ur.moveJoints("Starting position", 0.1, 0.1)
