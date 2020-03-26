@@ -67,7 +67,7 @@ class WeePlantDB():
                             plant_ID INT,
                             image text,
                             height REAL,
-                            colour SMALLINT[],
+                            colour NUMERIC[][],
                             PRIMARY KEY (time, plant_ID),
                             FOREIGN KEY (plant_ID) REFERENCES Plant(plant_ID) );""", vars=None)
 
@@ -104,8 +104,8 @@ class WeePlantDB():
         # Creem i executem la query per carregar les plantes de prova
         queryPlants = "INSERT INTO Plant(name, pot_number, since, watering_time, moisture_threshold, moisture_period, photo_period) VALUES "
         queryPlants += "('Rafflesia arnoldii', 1, '1999-01-08 04:05:06', 500, .7, 300, 200), "
-        queryPlants += "('Dracaena cinnabari', 2, '1999-01-08 04:05:06', 10, .2, 600, 20), "
-        queryPlants += "('Tacca chantrieri', 3, '1999-01-08 04:05:06', 1, .9, 60, 2);"
+        queryPlants += "('Dracaena cinnabari', 2, '1999-01-08 04:05:06', 10, .2, 600, 40), "
+        queryPlants += "('Tacca chantrieri', 3, '1999-01-08 04:05:06', 1, .9, 60, 20);"
         cursor.execute(queryPlants)
 
         # Preparem i executem la query per carregar les imatges
@@ -114,19 +114,31 @@ class WeePlantDB():
         image2 = open('images/2.jpeg', 'rb').read()
         image3 = open('images/3.jpg', 'rb').read()
 
+        color1 = []
+        color2 = []
+        color3 = []
+        for j in range (3):
+            color1.append([])
+            color2.append([])
+            color3.append([])
+            for i in range(255):
+                color1[j].append(i % 255)
+                color2[j].append((255 - i) % 255)
+                color3[j].append(int((255*(i+.1)**(-1))%255))
+
         # Preparem i executem la query
         queryImages = "INSERT INTO Imatge(time, plant_ID, image, height, colour) VALUES "
-        queryImages += "('1999-01-08 04:05:06', 1, %s, 35, ARRAY[255, 0, 0]),"
-        queryImages += "('1999-01-09 04:05:06', 1, %s, 35, ARRAY[255, 0, 0]),"
-        queryImages += "('1999-01-10 04:05:06', 1, %s, 35, ARRAY[255, 0, 0]),"
-        queryImages += "('1999-01-08 04:05:06', 2, %s, 400, ARRAY[10, 255, 0]),"
-        queryImages += "('1999-01-08 04:05:06', 3, %s, 5, ARRAY[2, 200, 200]);"
-        #cursor.execute(queryImages, (pg.Binary(image1), pg.Binary(image2), pg.Binary(image3), ))
-        cursor.execute(queryImages,(str(base64.b64encode(image1))[2:-1],
-                                    str(base64.b64encode(image2))[2:-1],
-                                    str(base64.b64encode(image3))[2:-1],
-                                    str(base64.b64encode(image2))[2:-1],
-                                    str(base64.b64encode(image3))[2:-1], ))
+        queryImages += "('1999-01-08 04:05:06', 1, %s, 35, %s),"
+        queryImages += "('1999-01-09 04:05:06', 1, %s, 35, %s),"
+        queryImages += "('1999-01-10 04:05:06', 1, %s, 35, %s),"
+        queryImages += "('1999-01-08 04:05:06', 2, %s, 400, %s),"
+        queryImages += "('1999-01-08 04:05:06', 3, %s, 5, %s);"
+        
+        cursor.execute(queryImages,(str(base64.b64encode(image1))[2:-1], color1,
+                                    str(base64.b64encode(image2))[2:-1], color2,
+                                    str(base64.b64encode(image3))[2:-1], color3,
+                                    str(base64.b64encode(image2))[2:-1], color3,
+                                    str(base64.b64encode(image3))[2:-1], color2, ))
 
         # Query per a carregar informació de un log d'humitat
         queryHumidity = "INSERT INTO Humidity(time, plant_ID, value) VALUES "
@@ -447,11 +459,12 @@ class WeePlantDB():
         # Obtenim l'objecte que permet executar les queries
         cursor = self.conn.cursor()
         cursor.execute("""INSERT INTO Imatge (time, plant_ID, image, height, colour) VALUES
-                            (%s, %s, %s, %s, ARRAY[0, 200, 30])""",
+                            (%s, %s, %s, %s, %s)""",
                             (str(time), str(plant_id),
-                            str( base64.b64encode(image))[2:-1], str(height)))
+                            str( base64.b64encode(image))[2:-1], str(height), colour, ))
         self.conn.commit()
         cursor.close()
+
 
 db = WeePlantDB()
 #db.printTable("imatge")
