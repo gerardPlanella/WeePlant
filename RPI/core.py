@@ -16,7 +16,7 @@ import plant
 sio = socketio.Client()
 db = database.WeePlantDB()
 
-#esp = esp32.ESP32("192.168.1.148",9008  )
+esp = esp32.ESP32("192.168.1.148",9008  )
 
 running = True
 noplant = True
