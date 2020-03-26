@@ -18,13 +18,14 @@ MODE_NO_ESP32 = True
 sio = socketio.Client()
 db = database.WeePlantDB()
 
-#esp = esp32.ESP32("192.168.1.148",9008  )
 class ESP32:
     def __init__(self):
         self.a = 0.3
     def getHumidity(self):
         return self.a
 esp = ESP32()
+if (not MODE_NO_ESP32): esp = esp32.ESP32("192.168.1.148", 9008)
+
 
 running = True
 noplant = True
