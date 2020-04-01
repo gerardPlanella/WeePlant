@@ -26,8 +26,8 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 QR_TMP = "/tmp/qr_tmp.jpeg"
 
-HOST = '192.168.1.143' 
-PORT = 9000
+HOST = '192.168.1.34' 
+PORT = 10000
 
 class ESP32():
     __slots__ = ('sock', 'conn', 'addr', 'port', 'connected')
@@ -99,7 +99,7 @@ class ESP32():
                 
                 start += len(bytes_read)
                 img_bytes += bytes_read
-                #if DEBUG: print("Packet Read: " + str(start) + "/" + str(end) + "\n")
+                if DEBUG: print("Packet Read: " + str(start) + "/" + str(end) + "\n")
 
             if DEBUG: print("Image Read \n")
             self.conn.send(bytes([OK]))
@@ -160,6 +160,8 @@ if __name__ == "__main__":
                 print(str(qr))
 
         esp32.getImage("test.jpeg")   
+
+        humidity = esp32.getHumidity();
 
         esp32.disconnect() 
 
