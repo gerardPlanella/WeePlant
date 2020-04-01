@@ -179,10 +179,10 @@ def getPlantData(path):
             ret["height"] = height
 
         #(red, green, blue) = plant.getColourHistogram()
-        ret["colour"] = plant.getColourHistogram()
+        ret["colour"] = [plant.getColourHistogram()[0]["value"], plant.getColourHistogram()[1]["value"], plant.getColourHistogram()[2]["value"]]
     return ret
 
-print(getPlantData("/images/2.jpeg"))
+#print(getPlantData("/images/2.jpeg"))
 
 """
 

@@ -90,6 +90,7 @@ class ESP32():
             img_len = int(self.conn.recv(1024))
             if DEBUG: print("Img Length " + str(img_len) + "\n")
             end = img_len
+            self.conn.send(bytes([OK]))
 
             while start != end :
                 if int((end - start)/BURST_SIZE) > 0 : 

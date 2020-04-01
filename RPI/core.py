@@ -9,13 +9,23 @@ from robot import UR
 import db as database
 import time
 import datetime
-import esp32
+#import esp32
 import plant
 #from gpiozero import OutputDevice
 
+MODE_NO_ESP32 = True
+
 sio = socketio.Client()
 db = database.WeePlantDB()
-#esp = esp32.ESP32()
+
+class ESP32:
+    def __init__(self):
+        self.a = 0.3
+    def getHumidity(self):
+        return self.a
+esp = ESP32()
+if (not MODE_NO_ESP32): esp = esp32.ESP32("192.168.1.148", 9008)
+
 
 running = True
 noplant = True
@@ -177,8 +187,8 @@ def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
 
     #Time To Wait For Next Measure
     now = datetime.datetime.now()
-    ttwfnm = now - min
-    if (now + ttwfnm < now): ttwfnm = ttwfnm.total_seconds()
+    ttwfnm = min - now
+    if (now + ttwfnm > now): ttwfnm = ttwfnm.total_seconds()
     else: ttwfnm = 0
 
     ret = {
@@ -189,8 +199,8 @@ def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
 
     return ret
 
-def doMeasure(plant_id):
-    print("moving UR to humidity tool")
+def doMeasure(plant_id, plantsInfo):
+    print("moving UR to humidity tool to check plant " + str(plant_id))
 
     attempts = TOOL_ATTEMPTS
 
@@ -199,7 +209,7 @@ def doMeasure(plant_id):
         if attempts == 0:
             print("moving UR to home")
             print("ERROR: unable to connect to the tool")
-            return
+            return False
 
         attempts -= 1
         print("UR tries to connect again")
@@ -224,67 +234,99 @@ def doMeasure(plant_id):
         print("turn on the pump")
         print("UR leave the tool")
 
-    return
+    return True
 
 def getPlantData(path):
     plant = Plant(image_path=path, write_image_output=True, result_path= "./out_plant_debugg/plant_2_info.json", write_result=True)
     plant.calculate()
 
-    ret = {
-        "height": 0,
-        "colour": 0
-    }
+    ret = {"height": 0, "colour": 0}
 
     if plant.isFramed() is True:
         height = plant.getHeight()
 
         if (not (height is not False)):
-            #print("Plant Height: " + str(height) + " pix\n")
-            #print("Plant Width: " + str(width) + " pix\n")
-            return
+            ret["height"] = -1
+            return ret
         else:
             ret["height"] = height
 
-        (red, green, blue) = plant.getColourHistogram()
+        ret["colour"] = [plant.getColourHistogram()[0]["value"], plant.getColourHistogram()[1]["value"], plant.getColourHistogram()[2]["value"]]
+    return ret
 
 def takePicture(plant_id):
     print("moving UR to plant " + str(plant_id))
 
     time = datetime.datetime.now()
-    esp.getImage("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
+    #esp.getImage("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
 
     ## TODO:
-    info = getPlantData()
+    ##info = getPlantData()
 
-    db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
+    ##db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
+
+    #db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg",'rb').read(),5,[233,222,222])
+
+    aux = []
+    for i in range(3):
+        aux.append([])
+        for j in range(255): aux[i].append(j)
+
+    if (plant_id != 2): db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpg",'rb').read(),5, aux)
+    else: db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpeg",'rb').read(),5, aux)
 
     return
+
+def UR_home():
+    print("UR going to home position")
 
 def main():
     plantsInfo = requestTimings(db)
     if (len(plantsInfo) == 0): noplant = True
+    else: noplant = False
 
     while (noplant):
-        sleep(1)
-
-    lastMeasureInfo = requestTimestamps(db, plantsInfo)
+        time.sleep(1)
 
     while (running):
+        lastMeasureInfo = requestTimestamps(db, plantsInfo)
+
         UR_home()
 
-        nextMeasure = getTimeForEarliestMeasure()
-        time.sleep(nextMeasure["time"])
+        nextMeasure = getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo)
 
-        if (nextMeasure["type"] in "humidity"): doMeasure(nextMeasure["index"])
-        elif (nextMeasure["type"] in "image"): takePicture(nextMeasure["index"])
+        print("Waiting until: " + str(nextMeasure))
+        if (nextMeasure["time"] > 0): time.sleep(nextMeasure["time"])
+
+        OK = True
+        if (nextMeasure["type"] in "humidity"): doMeasure(nextMeasure["plant"], plantsInfo)
+        elif (nextMeasure["type"] in "image"): takePicture(nextMeasure["plant"])
+
+        #print(nextMeasure)
+        print("\n" + "-"*80 + "\n")
+        #sio.wait()
 
     db.closeDB()
 
 if __name__ == '__main__':
 
-    sio.connect('http://localhost:2000')
+    #sio.connect('http://www.weeplant.es:80')
 
-    #main()
+    main()
+
+    """
+    if esp.connect() is True:
+
+        while True:
+            print("TAKE PICTURE CALL")
+            takePicture(1)
+
+            time.sleep(3)
+    else:
+        print("Not connected.")
+
+    """
+
     sio.wait()
 
     #ur = UR("192.168.1.104")
