@@ -26,8 +26,8 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 QR_TMP = "/tmp/qr_tmp.jpeg"
 
-HOST = '192.168.1.143' 
-PORT = 9000
+HOST = '192.168.1.34' 
+PORT = 10000
 
 class ESP32():
     __slots__ = ('sock', 'conn', 'addr', 'port', 'connected')
@@ -160,4 +160,11 @@ if __name__ == "__main__":
 
         esp32.getImage("test.jpeg")   
 
+        humidity = esp32.getHumidity();
+
         esp32.disconnect() 
+
+
+
+
+
