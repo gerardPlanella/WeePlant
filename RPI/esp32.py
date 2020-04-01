@@ -112,8 +112,6 @@ class ESP32():
 
             return image
             
-
-            
         return None
 
     def getImage(self, imagePath):
@@ -163,8 +161,3 @@ if __name__ == "__main__":
         esp32.getImage("test.jpeg")   
 
         esp32.disconnect() 
-
-
-
-
-
