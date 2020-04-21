@@ -120,8 +120,9 @@ def decodeQR(code):
             try:
                 aux[1] = float(aux[1])
             except:
+                pass
 
-        attributes.append([aux[0], aux[1]])
+    attributes.append([aux[0], aux[1]])
 
     return {
         "name": attributes[0][1],
@@ -313,8 +314,9 @@ def main():
 if __name__ == '__main__':
 
     #sio.connect('http://www.weeplant.es:80')
+    sio.connect('http://localhost:2000')
 
-    main()
+    #main()
 
     """
     if esp.connect() is True:
