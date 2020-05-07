@@ -10,14 +10,11 @@ import db as database
 import time
 import datetime
 import esp32 
-from plant import Plant
 import signal
 import sys
+
 import plant
 from sim_robot import UR_SIM
-
-#from gpiozero import OutputDevice
-
 
 MODE_ESP32 = False
 
@@ -42,7 +39,7 @@ db = database.WeePlantDB()
 #ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
 
 if (MODE_ESP32):
-    esp = esp32.ESP32("192.168.1.36", 8013)
+    esp = esp32.ESP32("192.168.1.36", 8014)
     if(not esp.connect()):
         print("Connection Error")
     else:
@@ -133,7 +130,8 @@ def disconnect():
 
 #TODO: fer la funció a partir del string generat pel QR
 """Exemple: http://www.weeplant.es:80/?name=deictics_plant&watering_time=10&moisture_threshold=.2&moisture_period=60&photo_period=500"""
-def decodeQR(code, potNum):
+
+def decodeQR(code):
     code = code.split("?")[1]
     attributesAux = code.split("&")
     attributes = []
@@ -152,12 +150,12 @@ def decodeQR(code, potNum):
 
     return {
         "name": attributes[0][1],
-        "pot_number": potNum,
+        "pot_number": attributes[1][1],
         "since": "'" + str(datetime.datetime.now()) + "'",
-        "watering_time": attributes[1][1],
-        "moisture_threshold": attributes[2][1],
-        "moisture_period": attributes[3][1],
-        "photo_period": attributes[4][1]
+        "watering_time": attributes[2][1],
+        "moisture_threshold": attributes[3][1],
+        "moisture_period": attributes[4][1],
+        "photo_period": attributes[5][1]
     }
 
 def requestTimings(db):
@@ -251,7 +249,7 @@ def doMeasure(plant_id, plantsInfo):
     value = esp.getHumidity()
 
     print("UR leaves the tool")
-    db.addHumidityMeasure(datetime.datetime.now(), plant_id, value)
+    db.addHumidityValue(datetime.datetime.now(), plant_id, value)
 
     plantInfo = plantsInfo[0]
     for plant in plantsInfo:
@@ -313,8 +311,6 @@ def takePicture(plant_id):
     db.addImage(time, plant_id, open(path, 'rb').read(), 70, colour)
 
     #db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg",'rb').read(),5,[233,222,222])
-    ## TODO:
-    info = getPlantData("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
 
     '''
     aux = []
@@ -325,8 +321,8 @@ def takePicture(plant_id):
     if (plant_id != 2): db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpg",'rb').read(),5, aux)
     else: db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpeg",'rb').read(),5, aux)
     '''
-    db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
 
+    db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
     return
 
 def add_plant():
