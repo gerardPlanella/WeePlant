@@ -59,11 +59,11 @@ class UR_SIM():
             print("Bad input in sim robot.")
             return
         self.s.sendall(("#"+str(potNumber) +"\n").encode('ascii'))
-
+"""
 if __name__ == "__main__":
     sim = UR_SIM("localhost", 25852)
     sim.move("home",20,50)
     sim.move("ground tool",20,50)
     sim.move("ground tool grab",20,50)
     sim.move("home",20,50)
-    
+""" 

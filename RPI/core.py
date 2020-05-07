@@ -13,22 +13,13 @@ import esp32
 from plant import Plant
 import signal
 import sys
-import fakeesp32
 import plant
 from sim_robot import UR_SIM
+
 #from gpiozero import OutputDevice
 
-MODE_NO_ESP32 = True
 
-UR_SIM_IP = "localhost"
-UR_SIM_PORT = 25852
-
-sio = socketio.Client()
-db = database.WeePlantDB()
-
-ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
-
-MODE_ESP32 = True
+MODE_ESP32 = False
 
 TOOL_ATTEMPTS = 5
 
@@ -42,8 +33,13 @@ abort_plant = False
 plantsInfo = []
 lastMeasureInfo = []
 
+UR_SIM_IP = "localhost"
+UR_SIM_PORT = 25852
+
 sio = socketio.Client()
 db = database.WeePlantDB()
+
+#ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
 
 if (MODE_ESP32):
     esp = esp32.ESP32("192.168.1.36", 8013)
@@ -56,8 +52,11 @@ if (MODE_ESP32):
 
 def signal_handler(sig, frame):
     print('Goodbye!')
-    esp.disconnect()
-    sio.disconnect()
+    if esp is not None:
+        esp.disconnect()
+    if sio is not None:
+        sio.disconnect()
+    
     sys.exit(0)
 
 @sio.on('newPotPython')
@@ -404,8 +403,8 @@ def main():
         action_in_progress = True
 
         OK = True
-        if (nextMeasure["type"] in "humidity"): doMeasure(nextMeasure["plant"], plantsInfo)
-        elif (nextMeasure["type"] in "image"): takePicture(nextMeasure["plant"])
+        #if (nextMeasure["type"] in "humidity"): doMeasure(nextMeasure["plant"], plantsInfo)
+        #elif (nextMeasure["type"] in "image"): takePicture(nextMeasure["plant"])
 
         action_in_progress = False
 
@@ -421,11 +420,12 @@ def main():
 
 if __name__ == '__main__':
 
-    sio.connect('http://www.weeplant.es:80')
-    signal.signal(signal.SIGINT, signal_handler)
-    #sio.connect('http://localhost:2000')
+    #sio.connect('http://www.weeplant.es:80')
+    #signal.signal(signal.SIGINT, signal_handler)
+    print("We Alive!")
+    sio.connect('http://localhost:2000')
 
-    main()
+    #main()
 
     """
     if esp.connect() is True:

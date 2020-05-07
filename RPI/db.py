@@ -478,16 +478,16 @@ class WeePlantDB():
         cursor.close()
 
 
-db = WeePlantDB()
+#db = WeePlantDB()
 #db.printTable("imatge")
 
 #print(db.getHumidityLog(2))
 
-db.resetTables()
-db.addTestData2()
+#db.resetTables()
+#db.addTestData2()
 #print(db.getImages(1))
 #print(db.getPlant(1))
 #db.printTable('humidity')
-db.closeDB()
+#db.closeDB()
 
 #
