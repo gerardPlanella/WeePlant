@@ -279,11 +279,13 @@ int sendImage(WiFiClient client, camera_fb_t * fb) {
     ok = client.read();
     length = client.write(fb->buf, fb->len);
     if (length >= fb->len) {
+
       while (client.available() <= 0) {
         delay(100);
         PRINTLN("Waiting for availability");
       }
       ok = client.read();
+      
     } else {
       PRINT("[ERROR]Length sent: ");
       PRINTLN(length);

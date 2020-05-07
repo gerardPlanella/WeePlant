@@ -36,6 +36,8 @@ public class Animator extends JFrame implements Runnable {
     private JTextField frameRate;
     private JTextField interpolationPoints;
 
+
+    private JTextField helper;
     private JLabel actualFrameNumber;
 
     private int majorTickHelper;
@@ -115,6 +117,8 @@ public class Animator extends JFrame implements Runnable {
         lol.add(Box.createHorizontalStrut(2));
         lol.add(new JLabel("Interpolation points:"));
         lol.add(interpolationPoints);
+        helper = new JTextField("");
+        lol.add(helper);
 
         main.add(Box.createVerticalStrut(2));
         main.add(lel);
@@ -251,7 +255,6 @@ public class Animator extends JFrame implements Runnable {
 
         if (actualFrame != null) {
             String angles = mano.getAngle() + " º " + mano1.getAngle() + " º" + mano2.getAngle() + " º " + brazo.getAngle() + " º";
-
             g.setColor(Color.white);
             text("Joint angles: " + angles, 2, 0, Color.white, g);
 
@@ -381,6 +384,7 @@ public class Animator extends JFrame implements Runnable {
 
 
         if(hasAnUpdate){
+            helper.setText("["+mano.getAngle() + ", " + mano1.getAngle() + ", " + mano2.getAngle() + ", " + brazo.getAngle() + "]");
             actualFrame.updateValue(mano.getConvertedAngle(), 0);
             actualFrame.updateValue(brazo.getConvertedAngle(), 1);
             actualFrame.updateValue(mano1.getConvertedAngle(), 2);

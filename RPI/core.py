@@ -11,12 +11,18 @@ import time
 import datetime
 import fakeesp32
 import plant
+from sim_robot import UR_SIM
 #from gpiozero import OutputDevice
 
 MODE_NO_ESP32 = True
 
+UR_SIM_ADRESS = "localhost"
+UR_SIM_PORT = 25852
+
 sio = socketio.Client()
 db = database.WeePlantDB()
+
+ur_sim = UR_SIM(UR_SIM_ADRESS, UR_SIM_PORT)
 
 class ESP32:
     def __init__(self):

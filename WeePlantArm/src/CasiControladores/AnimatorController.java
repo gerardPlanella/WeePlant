@@ -6,6 +6,7 @@ import CasiControladores.FilesManager.MalformedJsonFileException;
 import Model.RobotFrame;
 
 import Vistas.FinderWindow;
+import Vistas.WeePlantArm_3D_View;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -437,12 +438,21 @@ public class AnimatorController implements ActionListener, ChangeListener, Mouse
     public void updateMotors(String[] d) throws InterruptedException {
         int [] newValues = {Integer.parseInt(d[2]),Integer.parseInt(d[3]),Integer.parseInt(d[4]),Integer.parseInt(d[5])};
 
+
         RobotFrame lastFrame = frames.get(actualFrame);
         animator.representaFrame(lastFrame);
 
         frames.clear();
         frames.add(lastFrame);
         frames.add(new RobotFrame(newValues));
+
+        if(Integer.parseInt(d[6]) == 1){
+            WeePlantArm_3D_View.pickTool(WeePlantArm_3D_View.TOOL.WATER_TOOL);
+        }else if(Integer.parseInt(d[6]) == 2){
+            WeePlantArm_3D_View.pickTool(WeePlantArm_3D_View.TOOL.SOIL_TOOL);
+        }else if(Integer.parseInt(d[6]) == 3){
+            WeePlantArm_3D_View.pickTool(WeePlantArm_3D_View.TOOL.NONE);
+        }
 
         interpolate(Integer.parseInt(d[1]));
 

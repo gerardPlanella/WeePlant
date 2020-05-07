@@ -21,7 +21,7 @@ public class WeePlantArm_3D_View extends PApplet{
     private static TOOL toolSelected;
     private static float zoom;
 
-    enum TOOL{
+    public enum TOOL{
         WATER_TOOL,
         SOIL_TOOL,
         NONE
@@ -157,7 +157,7 @@ public class WeePlantArm_3D_View extends PApplet{
         }
     }
 
-    private void pickTool(TOOL newTool){
+    public static void pickTool(TOOL newTool){
         toolSelected = newTool;
     }
 
@@ -169,7 +169,6 @@ public class WeePlantArm_3D_View extends PApplet{
     public void mouseWheel(MouseEvent event){
         zoom -= event.getCount() * 0.05f;
         if(zoom <= 0) zoom = 0;
-        System.out.println(zoom);
     }
 
     private void mainSecundari(){

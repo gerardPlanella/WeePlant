@@ -23,8 +23,15 @@ class UR_SIM():
             print("Error connectant amb la simulacio")
 
         self.positions = {
-            "starting position": [90,90,90,90],
-            "second position" : [0,90,0,90]
+            "home": [90, 90, 90, 120,0],
+            "pot 1":[156, 79, 128, 90,0],
+            "pot 2":[156, 79, 128, 120,0],
+            "pot 3":[156, 79, 128, 150,0],
+            "watering tool grab":[169, 95, 128, -90, 1],
+            "watering tool release":[169, 95, 128, -90,3],
+            "ground tool grab":[169, 95, 128, -20,2],
+            "ground tool release":[169, 95, 128, -20,3],
+            "second position" : [0,90,0,90,0]
         }
 
     def getAddress(self):
