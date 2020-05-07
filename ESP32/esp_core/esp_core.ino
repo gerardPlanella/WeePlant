@@ -6,7 +6,7 @@
 #include "soc/rtc_cntl_reg.h"  // Disable brownour problems
 #include "driver/rtc_io.h"
 
-//#define HOME
+#define HOME
 #define DEBUG
 
 #ifdef DEBUG
@@ -54,16 +54,16 @@
 /*const char *SSID = "MOVISTAR_8182";
   const char* WiFiPassword = "jwF4292858Pv25hQ332X";
 */
-const char *SSID = "MOVISTAR_34A8";
-const char* WiFiPassword = "YNwzM7Ks7AE49FN4zEzz";
+const char *SSID = "MOVISTAR_E380";
+const char* WiFiPassword = "DFF9DD51C0B66A288CAC";
 #else
 const char *SSID = "dd-wrt";
 const char* WiFiPassword = "ur_hack_la_salle";
 #endif
 
 
-const uint16_t port = 9008;
-const char * host = "192.168.1.148";
+const uint16_t port = 9000;
+const char * host = "192.168.1.34";
 
 const float ADC_MULTIPLIER = 0.1875F; /* ADS1115  @ +/- 6.144V gain (16-bit results) */
 const float HUMIDITY_CONVERSION = 10.0F;
@@ -189,7 +189,7 @@ void loop() {
           volts = adc_value * ADC_MULTIPLIER / 1000;
           humidity = adc2hum(volts);
           PRINT("("); PRINT(humidity); PRINTLN("%)");
-          if (adc_value <= 0) {
+          if (humidity <= 0) {
             PRINTLN("[ERROR] ADC Value");
           } else {
             if (sendHumidity(client, humidity) < 0) {
@@ -274,12 +274,14 @@ int sendImage(WiFiClient client, camera_fb_t * fb) {
     client.print(fb->len);
     while (client.available() <= 0) {
       delay(100);
+      PRINTLN("Waiting for availability");
     }
     ok = client.read();
     length = client.write(fb->buf, fb->len);
     if (length >= fb->len) {
       while (client.available() <= 0) {
         delay(100);
+        PRINTLN("Waiting for availability");
       }
       ok = client.read();
     } else {
