@@ -6,6 +6,9 @@ import json
 import os
 from plantcv import plantcv as pcv
 
+ROI_X = 0.2
+ROI_Y = 0.2
+
 class Plant():
     __slots__ = ["debug", "output_dir", "image_path", "write_image_output", "result_path", "data", "data_ready", "write_result"]
 
@@ -37,7 +40,12 @@ class Plant():
         pcv.params.debug_outdir = self.output_dir
 
         img, path, filename = pcv.readimage(filename=self.image_path)
-        width, height = img.shape[:2]
+        height, width = img.shape[:2]
+
+        roi_x = int(width * ROI_X)
+        roi_y = int(height * ROI_Y )
+
+        
 
         # Convert RGB to HSV and extract the saturation channel
         s = pcv.rgb2gray_hsv(rgb_img=img, channel='s')
@@ -88,7 +96,7 @@ class Plant():
         id_objects, obj_hierarchy = pcv.find_objects(img=masked2, mask=ab_fill)
 
         # Define ROI
-        roi1, roi_hierarchy= pcv.roi.rectangle(img=masked2, x=0, y=0, h=height/2, w=width/2)
+        roi1, roi_hierarchy= pcv.roi.rectangle(img=masked2, x=roi_x, y=roi_y, h=int((height * (1-ROI_Y))), w=int((width * (1-ROI_X))))
 
         # Decide which objects to keep
         roi_objects, hierarchy3, kept_mask, obj_area = pcv.roi_objects(img=img, roi_contour=roi1, 
@@ -109,7 +117,7 @@ class Plant():
             shape_imgs = pcv.analyze_object(img=img, obj=obj, mask=mask)
 
             # Shape properties relative to user boundary line (optional)
-            boundary_img1 = pcv.analyze_bound_horizontal(img=img, obj=obj, mask=mask, line_position=1680)
+            boundary_img1 = pcv.analyze_bound_horizontal(img=img, obj=obj, mask=mask, line_position=int(height*(1-ROI_Y)))
 
             outfile=False
             if self.write_image_output == True:
@@ -159,7 +167,7 @@ class Plant():
       
 if __name__ == '__main__':
 
-    plant = Plant(image_path="test3.jpg", write_image_output=True,result_path= "./temp/plant_info.json", write_result=True)
+    plant = Plant(image_path="test4.png", write_image_output=True,result_path= "./temp/plant_info.json", write_result=True)
     
     plant.calculate()
 

@@ -16,7 +16,7 @@ import sys
 import plant
 from sim_robot import UR_SIM
 
-MODE_ESP32 = False
+MODE_ESP32 = True
 
 TOOL_ATTEMPTS = 5
 
@@ -39,7 +39,7 @@ db = database.WeePlantDB()
 #ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
 
 if (MODE_ESP32):
-    esp = esp32.ESP32("192.168.1.36", 8014)
+    esp = esp32.ESP32("192.168.1.36", 8018)
     if(not esp.connect()):
         print("Connection Error")
     else:
@@ -249,6 +249,7 @@ def getPlantData(path):
     return ret
 
 def takePicture(plant_id):
+    global esp
     print("moving UR to plant " + str(plant_id))
 
     
@@ -287,7 +288,7 @@ def takePicture(plant_id):
     else: db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpeg",'rb').read(),5, aux)
     '''
 
-    db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
+    #db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
     return
 
 def add_plant():
@@ -381,10 +382,10 @@ def main():
 
 if __name__ == '__main__':
 
-    #sio.connect('http://www.weeplant.es:80')
+    sio.connect('http://www.weeplant.es:80')
     signal.signal(signal.SIGINT, signal_handler)
     print("We Alive!")
-    sio.connect('http://localhost:2000')
+    #sio.connect('http://localhost:2000')
 
     main()
 
