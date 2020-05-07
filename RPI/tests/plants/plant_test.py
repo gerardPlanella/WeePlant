@@ -39,8 +39,6 @@ class Plant():
         img, path, filename = pcv.readimage(filename=self.image_path)
         width, height = img.shape[:2]
 
-        print(str(width) + "  " + str(height))
-
         # Convert RGB to HSV and extract the saturation channel
         s = pcv.rgb2gray_hsv(rgb_img=img, channel='s')
 
@@ -111,12 +109,12 @@ class Plant():
             shape_imgs = pcv.analyze_object(img=img, obj=obj, mask=mask)
 
             # Shape properties relative to user boundary line (optional)
-            #boundary_img1 = pcv.analyze_bound_horizontal(img=img, obj=obj, mask=mask, line_position=1680)
+            boundary_img1 = pcv.analyze_bound_horizontal(img=img, obj=obj, mask=mask, line_position=1680)
 
             outfile=False
             if self.write_image_output == True:
                 outfile = self.output_dir + "/" + filename
-                cv2.imwrite(outfile, img)
+                cv2.imwrite(outfile, boundary_img1)
 
             # Determine color properties: Histograms, Color Slices, output color analyzed histogram (optional)
             color_histogram = pcv.analyze_color(rgb_img=img, mask=kept_mask, hist_plot_type="rgb")
@@ -161,11 +159,11 @@ class Plant():
       
 if __name__ == '__main__':
 
-    plant = Plant(image_path="test2.jpg", write_image_output=True,result_path= "./temp/plant_info.json", write_result=True)
+    plant = Plant(image_path="test3.jpg", write_image_output=True,result_path= "./temp/plant_info.json", write_result=True)
     
     plant.calculate()
 
-    if plant.isFramed() is True:
+    if True:
         height = plant.getHeight()
         width = plant.getWidth()
 
@@ -176,6 +174,7 @@ if __name__ == '__main__':
         (red, green, blue) = plant.getColourHistogram()
 
         if (red != green) and (green != blue) and (blue != False) :
+            """
             print("-------- RED --------\n\n")
             print(json.dumps(red, indent=4, sort_keys=True) + "\n")
 
@@ -184,6 +183,7 @@ if __name__ == '__main__':
 
             print("-------- BLUE --------\n\n")
             print(json.dumps(blue, indent=4, sort_keys=True) + "\n")
+            """
         
         """
             #e.g: to get the y axis of the colour red:
@@ -202,8 +202,9 @@ if __name__ == '__main__':
             #e.g to get the first label
             first_red_label = red["label"][0]
             print("First red label " + str(first_red_label) + "\n")
-        """
-
+      """
+    else:
+        print("Plant Not Framed!")
 
 
 

@@ -273,6 +273,11 @@ int takePicture(camera_fb_t ** fb) {
 
 int sendImage(WiFiClient client, camera_fb_t * fb) {
   size_t length = 0;
+  int packet_length = 500;
+  int n_packets;
+  int last_packet;
+  int total_bytes = 0;
+  int i = 0;
   int ok = 0;
 
 
@@ -286,20 +291,19 @@ int sendImage(WiFiClient client, camera_fb_t * fb) {
       PRINTLN("Waiting for availability");
     }
     ok = client.read();
-    length = client.write(fb->buf, fb->len);
-    if (length >= fb->len) {
-
-      while (client.available() <= 0) {
+    for(i = 0; i < n_packets; i++){
+      if(i = n_packets - 1){
+        packet_length = fb->len % n_packets;
+      }
+      client.write(fb->buf + total_bytes, packet_length);
+      total_bytes += packet_length;
+    }
+    
+    while (client.available() <= 0) {
         delay(100);
         PRINTLN("Waiting for availability");
-      }
-      ok = client.read();
-      
-    } else {
-      PRINT("[ERROR]Length sent: ");
-      PRINTLN(length);
-      return -1;
     }
+    ok = client.read();
   } while (ok == 0);
 
 
