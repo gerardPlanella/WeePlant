@@ -399,8 +399,8 @@ def main():
         action_in_progress = True
 
         OK = True
-        #if (nextMeasure["type"] in "humidity"): doMeasure(nextMeasure["plant"], plantsInfo)
-        #elif (nextMeasure["type"] in "image"): takePicture(nextMeasure["plant"])
+        if (nextMeasure["type"] in "humidity"): doMeasure(nextMeasure["plant"], plantsInfo)
+        elif (nextMeasure["type"] in "image"): takePicture(nextMeasure["plant"])
 
         action_in_progress = False
 
@@ -417,11 +417,11 @@ def main():
 if __name__ == '__main__':
 
     #sio.connect('http://www.weeplant.es:80')
-    #signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
     print("We Alive!")
     sio.connect('http://localhost:2000')
 
-    #main()
+    main()
 
     """
     if esp.connect() is True:
