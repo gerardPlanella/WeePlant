@@ -12,6 +12,7 @@ import static java.awt.event.KeyEvent.VK_SPACE;
 public class WeePlantArm_3D_View extends PApplet{
 
     private PShape terra, base, hombro, pot;
+    private PShape one,two,three;
     private float rotX, rotY;
     private static float pitch_hombro;
     private static float yaw;
@@ -20,6 +21,11 @@ public class WeePlantArm_3D_View extends PApplet{
 
     private static TOOL toolSelected;
     private static float zoom;
+    private static boolean []showPot = {true,true,true};//{false ,false, false};
+
+    public static void addPot(int potToAdd) {
+        showPot[potToAdd - 1] = true;
+    }
 
     public enum TOOL{
         WATER_TOOL,
@@ -50,6 +56,15 @@ public class WeePlantArm_3D_View extends PApplet{
         terra = loadShape(folder + "r3.obj");
         pot = loadShape(folder + "pot.obj");
 
+
+        one = loadShape(folder + "1.obj");
+        two = loadShape(folder + "2.obj");
+        three = loadShape(folder + "3.obj");
+
+        one.disableStyle();
+        two.disableStyle();
+        three.disableStyle();
+
         base.disableStyle();
         pot.disableStyle();
         hombro.disableStyle();
@@ -75,6 +90,7 @@ public class WeePlantArm_3D_View extends PApplet{
 
         scale(zoom);
 
+
         pushMatrix();
 
         rectMode(CENTER);
@@ -84,16 +100,39 @@ public class WeePlantArm_3D_View extends PApplet{
 
         popMatrix();
 
-        fill(226, 183, 105);
         float rad = terra.getWidth()/1.5f;
-
+        int potNum = 0;
         for(float angle = 0; angle < 360; angle++) {
-            if(angle == 30 || angle == 60 || angle == 90) {
-                pushMatrix();
-                scale(3);
-                translate( cos((float)Math.toRadians(angle)) * rad, 0,sin((float)Math.toRadians(angle)) * rad);
-                shape(pot);
-                popMatrix();
+            if((angle == 30) || (angle == 60) || (angle == 90)) {
+                if((showPot[0] && angle == 30) || (showPot[1] && angle == 60)  || (showPot[2] && angle == 90) ){
+                    //Draw number
+                    pushMatrix();
+                    scale(8);
+                    translate( cos((float)Math.toRadians(angle)) * (rad/1.5f), 0,sin((float)Math.toRadians(angle)) * (rad/1.5f));
+                    rotateY(PI);
+                    rotateX(PI/2);
+
+                    fill(255,255,255);
+
+                    if(potNum == 0)
+                        shape(one);
+                    else if(potNum == 1)
+                        shape(two);
+                    else if(potNum == 2)
+                        shape(three);
+                    popMatrix();
+
+
+                    fill(226, 183, 105);
+                    //Draw pot
+                    pushMatrix();
+                    scale(3);
+                    translate( cos((float)Math.toRadians(angle)) * rad, 0,sin((float)Math.toRadians(angle)) * rad);
+                    shape(pot);
+                    popMatrix();
+                }
+                potNum++;
+
             }else if(angle == 270 && toolSelected != TOOL.WATER_TOOL){
                 pushMatrix();
                 fill(30,144,255);

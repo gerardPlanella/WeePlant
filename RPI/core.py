@@ -16,13 +16,13 @@ from sim_robot import UR_SIM
 
 MODE_NO_ESP32 = True
 
-UR_SIM_ADRESS = "localhost"
+UR_SIM_IP = "localhost"
 UR_SIM_PORT = 25852
 
 sio = socketio.Client()
 db = database.WeePlantDB()
 
-ur_sim = UR_SIM(UR_SIM_ADRESS, UR_SIM_PORT)
+ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
 
 class ESP32:
     def __init__(self):
@@ -45,6 +45,7 @@ TOOL_ATTEMPTS = 5
 @sio.on('newPotPython')
 def on_message(data):
     #Move the robot and start the QR reading.
+    #ur_sim.move()
     print("Moving robot to add plant number: " + str(data))
     #TODO: Actually move the robot.
     #When the robot is in position get the QR.

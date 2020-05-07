@@ -385,6 +385,7 @@ public class Animator extends JFrame implements Runnable {
 
         if(hasAnUpdate){
             helper.setText("["+mano.getAngle() + ", " + mano1.getAngle() + ", " + mano2.getAngle() + ", " + brazo.getAngle() + "]");
+
             actualFrame.updateValue(mano.getConvertedAngle(), 0);
             actualFrame.updateValue(brazo.getConvertedAngle(), 1);
             actualFrame.updateValue(mano1.getConvertedAngle(), 2);

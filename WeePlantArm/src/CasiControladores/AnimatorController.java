@@ -436,8 +436,7 @@ public class AnimatorController implements ActionListener, ChangeListener, Mouse
     }
 
     public void updateMotors(String[] d) throws InterruptedException {
-        int [] newValues = {Integer.parseInt(d[2]),Integer.parseInt(d[3]),Integer.parseInt(d[4]),Integer.parseInt(d[5])};
-
+        int [] newValues = {Integer.parseInt(d[2]), Integer.parseInt(d[5]), Integer.parseInt(d[3]),Integer.parseInt(d[4])};
 
         RobotFrame lastFrame = frames.get(actualFrame);
         animator.representaFrame(lastFrame);
