@@ -4,6 +4,7 @@ import CasiControladores.*;
 
 import processing.core.PApplet;
 import processing.core.PShape;
+import processing.event.MouseEvent;
 
 import static java.awt.event.KeyEvent.VK_CONTROL;
 import static java.awt.event.KeyEvent.VK_SPACE;
@@ -17,11 +18,22 @@ public class WeePlantArm_3D_View extends PApplet{
     private static float pitch_colze;
     private static float pitch_endeffector;
 
+    private static TOOL toolSelected;
+    private static float zoom;
+
+    enum TOOL{
+        WATER_TOOL,
+        SOIL_TOOL,
+        NONE
+    }
+
     public static void main(String[] args) {
         pitch_hombro = 3 * PI / 2;
         yaw = PI / 2;
         pitch_colze = 3 * PI / 2;
         pitch_endeffector = PI / 2;
+        toolSelected = TOOL.NONE;
+        zoom = 1;
         PApplet.main("Vistas.WeePlantArm_3D_View");
     }
 
@@ -50,24 +62,24 @@ public class WeePlantArm_3D_View extends PApplet{
         }
 
         background(33);
+        noStroke();
 
         smooth();
         lights();
-        directionalLight(51, 102, 126, -1, 0, 0);
-
-        noStroke();
-
+        directionalLight(100, 100, 100, 1, 10, 1);
 
         translate(width / 2.0f,height / 1.30f);
 
         rotateX(rotX + PI);
         rotateY(rotY);
 
+        scale(zoom);
+
         pushMatrix();
 
         rectMode(CENTER);
         rotateX(PI/2);
-        fill(200, 200, 200);
+        fill(50, 50, 50);
         rect(0,0,1000,1000);
 
         popMatrix();
@@ -82,31 +94,38 @@ public class WeePlantArm_3D_View extends PApplet{
                 translate( cos((float)Math.toRadians(angle)) * rad, 0,sin((float)Math.toRadians(angle)) * rad);
                 shape(pot);
                 popMatrix();
-            }else if(angle == 270){
+            }else if(angle == 270 && toolSelected != TOOL.WATER_TOOL){
                 pushMatrix();
-                translate( cos((float)Math.toRadians(angle)) * (rad + 20), 25/2.0f,sin((float)Math.toRadians(angle)) * (rad + 20));
-                box(25);
+                fill(30,144,255);
+                translate( cos((float)Math.toRadians(angle)) * (rad + 30), 0,sin((float)Math.toRadians(angle)) * (rad + 30));
+                drawCylinder(10, 0, 20, 4);
+                popMatrix();
+            }else if(angle == 200 && toolSelected != TOOL.SOIL_TOOL){
+                pushMatrix();
+                fill(160,82,45);
+                translate( cos((float)Math.toRadians(angle)) * (rad + 30), 0,sin((float)Math.toRadians(angle)) * (rad + 30));
+                drawCylinder(10, 0, 20, 4);
                 popMatrix();
             }
         }
 
         //Color del robot
-        fill(121, 171, 224);
+        fill(35,32,32);
         translate(0,terra.getHeight(),0);
         shape(terra);
 
-        fill(121, 171, 224);
+        fill(35,32,32);
         translate(0, 4, 0);
         rotateY(yaw + PI / 2);
         shape(base);
 
-        fill(255,0,255);
+        fill(255,115,21);
         translate(0, 25, 0);
         rotateY(PI);
         rotateX(-pitch_hombro + PI);
         shape(hombro);
 
-        fill(255,0,255);
+        fill(255,115,21);
         translate(0, 0, 50);
         rotateY(PI);
         rotateX(pitch_colze);
@@ -116,14 +135,41 @@ public class WeePlantArm_3D_View extends PApplet{
         translate(0, 0, 50);
         rotateX(pitch_endeffector + PI);
         noStroke();
-        fill(255, 255, 255);
-        drawCylinder(10, 0, 20, 30);
+
+        if(toolSelected == TOOL.WATER_TOOL){
+            fill(30,144,255);
+        }else if(toolSelected == TOOL.SOIL_TOOL){
+            fill(160,82,45);
+        }
+
+        if(toolSelected != TOOL.NONE) {
+            drawCylinder(10, 0, 20, 30);
+        }
     }
 
+    public void keyPressed(){
+        if(key == 'a'){
+            pickTool(TOOL.SOIL_TOOL);
+        }else if(key == 's'){
+            pickTool(TOOL.WATER_TOOL);
+        }else{
+            pickTool(TOOL.NONE);
+        }
+    }
+
+    private void pickTool(TOOL newTool){
+        toolSelected = newTool;
+    }
 
     public void mouseDragged(){
         rotY -= (mouseX - pmouseX) * 0.005;
         rotX -= (mouseY - pmouseY) * 0.005;
+    }
+
+    public void mouseWheel(MouseEvent event){
+        zoom -= event.getCount() * 0.05f;
+        if(zoom <= 0) zoom = 0;
+        System.out.println(zoom);
     }
 
     private void mainSecundari(){
