@@ -23,8 +23,17 @@ class UR_SIM():
             print("Error connectant amb la simulacio")
 
         self.positions = {
-            "starting position": [90,90,90,90],
-            "second position" : [0,90,0,90]
+            "home": [90, 90, 90, 120,0],
+            "pot 1":[156, 79, 128, 90,0],
+            "pot 2":[156, 79, 128, 120,0],
+            "pot 3":[156, 79, 128, 150,0],
+            "watering tool":[169, 95, 128, -90, 0],
+            "watering tool grab":[169, 95, 128, -90, 1],
+            "watering tool release":[169, 95, 128, -90,3],
+            "ground tool":[169, 95, 128, -20,0],
+            "ground tool grab":[169, 95, 128, -20,2],
+            "ground tool release":[169, 95, 128, -20,3],
+            "second position" : [0,90,0,90,0]
         }
 
     def getAddress(self):
@@ -35,6 +44,7 @@ class UR_SIM():
 
         for e in self.positions[position_name]:
             trama += str(e) + "."
+
         #Ara una mica de Magia negra...
         trama = "\n".join(trama.rsplit(".", 1))
         
@@ -43,7 +53,17 @@ class UR_SIM():
         #Response ignored. Its used to block the program untill the simulation reaches its goal
         self.s.recv(1024).decode('ascii')
 
+    #Pot number can be: 1 2 3
+    def addPot(self,potNumber):
+        if potNumber < 1 or potNumber > 3:
+            print("Bad input in sim robot.")
+            return
+        self.s.sendall(("#"+str(potNumber) +"\n").encode('ascii'))
+
 if __name__ == "__main__":
     sim = UR_SIM("localhost", 25852)
-    sim.move("starting position",20,50)
-    sim.move("second position",20,50)
+    sim.move("home",20,50)
+    sim.move("ground tool",20,50)
+    sim.move("ground tool grab",20,50)
+    sim.move("home",20,50)
+    

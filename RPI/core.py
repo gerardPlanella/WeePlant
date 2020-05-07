@@ -13,9 +13,24 @@ import esp32
 import plant
 import signal
 import sys
+<<<<<<< HEAD
 
-
+=======
+import fakeesp32
+import plant
+from sim_robot import UR_SIM
 #from gpiozero import OutputDevice
+
+MODE_NO_ESP32 = True
+>>>>>>> 62334d177873d7fe2821fbbd39acae05a0c1b7e2
+
+UR_SIM_IP = "localhost"
+UR_SIM_PORT = 25852
+
+sio = socketio.Client()
+db = database.WeePlantDB()
+
+ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
 
 MODE_ESP32 = True
 
@@ -52,6 +67,7 @@ def signal_handler(sig, frame):
 @sio.on('newPotPython')
 def on_message(data):
     #Move the robot and start the QR reading.
+    #ur_sim.move()
     print("Moving robot to add plant number: " + str(data))
     #TODO: Actually move the robot.
     #When the robot is in position get the QR.
@@ -75,6 +91,44 @@ def on_message(data):
     global action_in_progress
     global add_plant_request
     add_plant_request = True
+<<<<<<< HEAD
+=======
+    print("Moving UR to empty pot")
+
+    qr_content = []
+    while (len(qr_content) == 0):
+        qr_content = esp.getQR()
+
+        if (abort_plant):
+            print("moving UR to home")
+            abort_plant = False
+            return
+
+    np = decodeQR(qr_content[0], data)
+    nm = {
+        "id": db.getLastPlantAdded(),
+        "humidity": {
+            "time": datetime.datetime.now() - datetime.timedelta(seconds=np["moisture_period"]),
+            "value": 0
+            },
+        "watering": {
+            "time": datetime.datetime.now() - datetime.timedelta(seconds=np["moisture_period"]),
+            "value": 0
+            },
+        "image": datetime.datetime.now() - datetime.timedelta(seconds=np["photo_period"]),
+    }
+
+    plantsInfo.append(np)
+    lastMeasureInfo.append(nm)
+
+    db.addPlant(np["name"], np["pot_number"], np["since"], np["watering_time"], np["moisture_threshold"], np["moisture_period"], np["photo_period"])
+    db.addWateringValue(nm["watering"]["time"], nm["id"], nm["watering"]["value"])
+    db.addHumidityValue(nm["humidity"]["time"], nm["id"], nm["humidity"]["value"])
+
+    noplant = False
+
+    sio.emit('QRReading', db.getLastPK())
+>>>>>>> 62334d177873d7fe2821fbbd39acae05a0c1b7e2
     return
 
 @sio.event
@@ -258,6 +312,7 @@ def takePicture(plant_id):
 
     colour = [color1, color2, color3]
     time = datetime.datetime.now()
+
     path = "images/" + str(plant_id) + "_(" + str(time) + ").jpg"
 
     esp.getImage(path)
@@ -277,6 +332,8 @@ def takePicture(plant_id):
     if (plant_id != 2): db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpg",'rb').read(),5, aux)
     else: db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpeg",'rb').read(),5, aux)
     '''
+
+    db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
     return
 
 def add_plant():
