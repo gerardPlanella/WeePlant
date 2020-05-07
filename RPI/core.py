@@ -9,11 +9,11 @@ from robot import UR
 import db as database
 import time
 import datetime
-#import esp32
+import esp32
 import plant
 #from gpiozero import OutputDevice
 
-MODE_NO_ESP32 = True
+MODE_NO_ESP32 = False
 
 sio = socketio.Client()
 db = database.WeePlantDB()
@@ -24,7 +24,9 @@ class ESP32:
     def getHumidity(self):
         return self.a
 esp = ESP32()
-if (not MODE_NO_ESP32): esp = esp32.ESP32("192.168.1.148", 9008)
+
+if (not MODE_NO_ESP32):
+    esp = esp32.ESP32("192.168.1.148", 9008)
 
 
 running = True
@@ -57,7 +59,7 @@ def on_message(data):
 
 @sio.on('[ADD_PLANT]')
 def on_message(data):
-    print("Moving UR to empty pot")
+    print("Moving UR to addition pose")
 
     qr_content = []
     while (len(qr_content) == 0):
@@ -103,7 +105,7 @@ def disconnect():
     print('disconnected from server')
 
 #TODO: fer la funció a partir del string generat pel QR
-"""Exemple: http://www.weeplant.es:80/?name=deictics_plant&pot_number=404&watering_time=10&moisture_threshold=.2&moisture_period=60&photo_period=500"""
+"""Exemple: http://www.weeplant.es:80/?name=deictics_plant&watering_time=10&moisture_threshold=.2&moisture_period=60&photo_period=500"""
 def decodeQR(code):
     code = code.split("?")[1]
     attributesAux = code.split("&")
@@ -118,8 +120,9 @@ def decodeQR(code):
             try:
                 aux[1] = float(aux[1])
             except:
-                """"""
-        attributes.append([aux[0], aux[1]])
+                pass
+
+    attributes.append([aux[0], aux[1]])
 
     return {
         "name": attributes[0][1],
@@ -258,7 +261,7 @@ def takePicture(plant_id):
     print("moving UR to plant " + str(plant_id))
 
     time = datetime.datetime.now()
-    #esp.getImage("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
+    esp.getImage("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
 
     ## TODO:
     ##info = getPlantData()
@@ -311,8 +314,9 @@ def main():
 if __name__ == '__main__':
 
     #sio.connect('http://www.weeplant.es:80')
+    sio.connect('http://localhost:2000')
 
-    main()
+    #main()
 
     """
     if esp.connect() is True:

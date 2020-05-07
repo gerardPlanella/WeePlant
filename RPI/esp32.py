@@ -112,8 +112,6 @@ class ESP32():
 
             return image
             
-
-            
         return None
 
     def getImage(self, imagePath):
