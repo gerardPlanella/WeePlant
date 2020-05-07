@@ -10,17 +10,13 @@ import db as database
 import time
 import datetime
 import esp32 
-import plant
 import signal
 import sys
 
+import plant
+from sim_robot import UR_SIM
 
-UR_SIM_IP = "localhost"
-UR_SIM_PORT = 25852
-
-ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
-
-MODE_ESP32 = True
+MODE_ESP32 = False
 
 TOOL_ATTEMPTS = 5
 
@@ -34,8 +30,13 @@ abort_plant = False
 plantsInfo = []
 lastMeasureInfo = []
 
+UR_SIM_IP = "localhost"
+UR_SIM_PORT = 25852
+
 sio = socketio.Client()
 db = database.WeePlantDB()
+
+#ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
 
 if (MODE_ESP32):
     esp = esp32.ESP32("192.168.1.36", 8014)
@@ -48,8 +49,11 @@ if (MODE_ESP32):
 
 def signal_handler(sig, frame):
     print('Goodbye!')
-    esp.disconnect()
-    sio.disconnect()
+    if esp is not None:
+        esp.disconnect()
+    if sio is not None:
+        sio.disconnect()
+    
     sys.exit(0)
 
 @sio.on('newPotPython')
@@ -377,9 +381,10 @@ def main():
 
 if __name__ == '__main__':
 
-    sio.connect('http://www.weeplant.es:80')
+    #sio.connect('http://www.weeplant.es:80')
     signal.signal(signal.SIGINT, signal_handler)
-    #sio.connect('http://localhost:2000')
+    print("We Alive!")
+    sio.connect('http://localhost:2000')
 
     main()
 
