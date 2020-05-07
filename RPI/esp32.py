@@ -24,9 +24,11 @@ BURST_SIZE = 200
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-QR_TMP = "/tmp/qr_tmp.jpeg"
+QR_TMP = "./tmp/qr_tmp.jpeg"
 
-HOST = '192.168.1.34' 
+qr_count = 0
+
+HOST = '192.168.1.36' 
 PORT = 9000
 
 class ESP32():
@@ -64,20 +66,21 @@ class ESP32():
         return True
     
     def disconnect(self):
-        self.conn.send(bytes([EXIT]))
+        self.conn.sendall(bytes([EXIT]))
         if DEBUG: print("EXIT SENT")
         self.sock.close()
         self.connected = False
     
     def getHumidity(self):
-        humidity = 0
-
+        humidity = 0.5
+        """
         if self.connected is True:
-            self.conn.send(bytes([HUMIDITY]))
+            self.conn.sendall(bytes([HUMIDITY]))
             humidity = float(self.conn.recv(1024))
             if DEBUG: print("Humidity Received " + str(humidity) + "%\n")
-            self.conn.send(bytes([OK]))
+            self.conn.sendall(bytes([OK]))
             if DEBUG: print("OK sent\n")
+        """
         return humidity
     
     def grabImage(self):
@@ -86,11 +89,11 @@ class ESP32():
         end = 0
 
         if self.connected is True:
-            self.conn.send(bytes([IMAGE]))
+            self.conn.sendall(bytes([IMAGE]))
             img_len = int(self.conn.recv(1024))
             if DEBUG: print("Img Length " + str(img_len) + "\n")
             end = img_len
-            self.conn.send(bytes([OK]))
+            self.conn.sendall(bytes([OK]))
 
             while start != end :
                 if int((end - start)/BURST_SIZE) > 0 : 
@@ -103,7 +106,7 @@ class ESP32():
                 #if DEBUG: print("Packet Read: " + str(start) + "/" + str(end) + "\n")
 
             if DEBUG: print("Image Read \n")
-            self.conn.send(bytes([OK]))
+            self.conn.sendall(bytes([OK]))
             if DEBUG: print("OK sent\n")
 
             image_stream = BytesIO(img_bytes)
@@ -124,24 +127,36 @@ class ESP32():
         return False
 
     def getQR(self):
+        global qr_count
         image = self.grabImage()
         qr_list = []
 
+        if DEBUG:
+            path = ("_" + str(qr_count) + ".").join(QR_TMP.rsplit('.', 1))
+        else:
+            path = QR_TMP
+
         if image is not None:
-            image.save(QR_TMP)
-            img = image = cv2.imread(QR_TMP)
+            image.save(path)
+            img = image = cv2.imread(path)
             # find the barcodes in the image and decode each of the barcodes
             barcodes = pyzbar.decode(img)
             if DEBUG: print ("Barcodes Decoded \n")
             # loop over the detected barcodes
+            i = 0
             for barcode in barcodes:
                 barcodeData = barcode.data.decode("utf-8")
                 barcodeType = barcode.type
                 if(barcodeType == "QRCODE"):
                     qr_list.append(barcodeData)
-                    if DEBUG: print("Barcode #" + i + ": " + str(barcodeData) + "\n")
-        
-            os.remove(QR_TMP)
+                    if DEBUG: print("Barcode #" + str(i) + ": " + str(barcodeData) + "\n")
+                i = i + 1
+                
+
+            if(not DEBUG):
+                os.remove(QR_TMP)
+            else:
+                qr_count = qr_count + 1
 
         return qr_list
 

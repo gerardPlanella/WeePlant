@@ -62,8 +62,8 @@ const char* WiFiPassword = "ur_hack_la_salle";
 #endif
 
 
-const uint16_t port = 9000;
-const char * host = "192.168.1.34";
+const uint16_t port = 8013;
+const char * host = "192.168.1.36";
 
 const float ADC_MULTIPLIER = 0.1875F; /* ADS1115  @ +/- 6.144V gain (16-bit results) */
 const float HUMIDITY_CONVERSION = 10.0F;
@@ -131,7 +131,7 @@ void setup() {
 
   connectWiFi();
   while (connectToHost() < 0) {
-    delay(100);
+    delay(1000);
     PRINTLN("Waiting for Server");
   }
 

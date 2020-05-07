@@ -9,6 +9,10 @@ from robot import UR
 import db as database
 import time
 import datetime
+import esp32 
+from plant import Plant
+import signal
+import sys
 import fakeesp32
 import plant
 from sim_robot import UR_SIM
@@ -24,14 +28,12 @@ db = database.WeePlantDB()
 
 ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
 
-class ESP32:
-    def __init__(self):
-        self.a = 0.3
-    def getHumidity(self):
-        return self.a
-esp = ESP32()
-if (not MODE_NO_ESP32): esp = esp32.ESP32("192.168.1.148", 9008)
+MODE_ESP32 = True
 
+TOOL_ATTEMPTS = 5
+
+add_plant_request = False
+action_in_progress = False
 
 running = True
 noplant = True
@@ -40,7 +42,23 @@ abort_plant = False
 plantsInfo = []
 lastMeasureInfo = []
 
-TOOL_ATTEMPTS = 5
+sio = socketio.Client()
+db = database.WeePlantDB()
+
+if (MODE_ESP32):
+    esp = esp32.ESP32("192.168.1.36", 8013)
+    if(not esp.connect()):
+        print("Connection Error")
+    else:
+        print("Connection Established")
+
+
+
+def signal_handler(sig, frame):
+    print('Goodbye!')
+    esp.disconnect()
+    sio.disconnect()
+    sys.exit(0)
 
 @sio.on('newPotPython')
 def on_message(data):
@@ -56,14 +74,19 @@ def on_message(data):
 
 @sio.on('[CHANGE_CONFIG]')
 def on_message(data):
+    global plantsInfo
     plantsInfo = requestTimings(db)
 
 @sio.on('[ABORT_PLANT]')
 def on_message(data):
+    global abort_plant
     abort_plant = True
 
 @sio.on('[ADD_PLANT]')
 def on_message(data):
+    global action_in_progress
+    global add_plant_request
+    add_plant_request = True
     print("Moving UR to empty pot")
 
     qr_content = []
@@ -125,7 +148,7 @@ def decodeQR(code, potNum):
             try:
                 aux[1] = float(aux[1])
             except:
-                """"""
+                pass
         attributes.append([aux[0], aux[1]])
 
     return {
@@ -207,6 +230,8 @@ def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
     return ret
 
 def doMeasure(plant_id, plantsInfo):
+    global TOOL_ATTEMPTS
+
     print("moving UR to humidity tool to check plant " + str(plant_id))
 
     attempts = TOOL_ATTEMPTS
@@ -264,25 +289,98 @@ def getPlantData(path):
 def takePicture(plant_id):
     print("moving UR to plant " + str(plant_id))
 
-    time = datetime.datetime.now()
-    esp.getImage("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
+    
+    color1 = []
+    color2 = []
+    color3 = []
+    for j in range (3):
+        color1.append([])
+        color2.append([])
+        color3.append([])
+        for i in range(255):
+            color1[j].append(i % 255)
+            color2[j].append((255 - i) % 255)
+            color3[j].append(int((255*(i+.1)**(-1))%255))
 
+    colour = [color1, color2, color3]
+    time = datetime.datetime.now()
+
+    path = "images/" + str(plant_id) + "_(" + str(time) + ").jpg"
+
+    esp.getImage(path)
+
+    #info = getPlantData("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
+
+    db.addImage(time, plant_id, open(path, 'rb').read(), 70, colour)
+
+    #db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg",'rb').read(),5,[233,222,222])
     ## TODO:
     info = getPlantData("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
 
+    '''
     aux = []
     for i in range(3):
         aux.append([])
         for j in range(255): aux[i].append(j)
 
+    if (plant_id != 2): db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpg",'rb').read(),5, aux)
+    else: db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpeg",'rb').read(),5, aux)
+    '''
     db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
 
     return
+
+def add_plant():
+    global abort_plant
+    global plantsInfo
+    global noplant
+
+    print("Moving UR to addition pose")
+    qr_content = []
+    while (len(qr_content) == 0):
+
+        qr_content = esp.getQR()
+
+        if (abort_plant):
+            print("moving UR to home")
+            abort_plant = False
+            return
+
+    np = decodeQR(qr_content[0])
+    nm = {
+        "id": db.getLastPlantAdded(),
+        "humidity": {
+            "time": datetime.datetime.now() - datetime.timedelta(seconds=np["moisture_period"]),
+            "value": 0
+            },
+        "watering": {
+            "time": datetime.datetime.now() - datetime.timedelta(seconds=np["moisture_period"]),
+            "value": 0
+            },
+        "image": datetime.datetime.now() - datetime.timedelta(seconds=np["photo_period"]),
+    }
+
+    plantsInfo.append(np)
+    lastMeasureInfo.append(nm)
+
+    db.addPlant(np["name"], np["pot_number"], np["since"], np["watering_time"], np["moisture_threshold"], np["moisture_period"], np["photo_period"])
+    db.addWateringValue(nm["watering"]["time"], nm["id"], nm["watering"]["value"])
+    db.addHumidityValue(nm["humidity"]["time"], nm["id"], nm["humidity"]["value"])
+
+    noplant = False
+
+    sio.emit('QRReading', db.getLastPK())
 
 def UR_home():
     print("UR going to home position")
 
 def main():
+    global add_plant_request
+    global action_in_progress
+    global running
+    global noplant
+    global lastMeasureInfo
+
     plantsInfo = requestTimings(db)
     if (len(plantsInfo) == 0): noplant = True
     else: noplant = False
@@ -291,6 +389,9 @@ def main():
         time.sleep(1)
 
     while (running):
+        
+
+
         lastMeasureInfo = requestTimestamps(db, plantsInfo)
 
         UR_home()
@@ -300,9 +401,17 @@ def main():
         print("Waiting until: " + str(nextMeasure))
         if (nextMeasure["time"] > 0): time.sleep(nextMeasure["time"])
 
+        action_in_progress = True
+
         OK = True
         if (nextMeasure["type"] in "humidity"): doMeasure(nextMeasure["plant"], plantsInfo)
         elif (nextMeasure["type"] in "image"): takePicture(nextMeasure["plant"])
+
+        action_in_progress = False
+
+        if(add_plant_request):
+            add_plant()
+            add_plant_request = False
 
         #print(nextMeasure)
         print("\n" + "-"*80 + "\n")
@@ -312,10 +421,11 @@ def main():
 
 if __name__ == '__main__':
 
-    #sio.connect('http://www.weeplant.es:80')
-    sio.connect('http://localhost:2000')
+    sio.connect('http://www.weeplant.es:80')
+    signal.signal(signal.SIGINT, signal_handler)
+    #sio.connect('http://localhost:2000')
 
-    #main()
+    main()
 
     """
     if esp.connect() is True:
