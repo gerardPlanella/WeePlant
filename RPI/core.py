@@ -306,8 +306,9 @@ def main():
 if __name__ == '__main__':
 
     #sio.connect('http://www.weeplant.es:80')
+    sio.connect('http://localhost:2000')
 
-    main()
+    #main()
 
     """
     if esp.connect() is True:
