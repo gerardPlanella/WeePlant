@@ -9,16 +9,34 @@ from robot import UR
 import db as database
 import time
 import datetime
+<<<<<<< HEAD
 import esp32 
 from plant import Plant
 import signal
 import sys
+=======
+import fakeesp32
+import plant
+#from gpiozero import OutputDevice
+
+MODE_NO_ESP32 = True
+>>>>>>> b246cf11ecd29cef8eb700780ea316e3fd57f8ee
 
 #from gpiozero import OutputDevice
 
+<<<<<<< HEAD
 MODE_ESP32 = True
 
 TOOL_ATTEMPTS = 5
+=======
+class ESP32:
+    def __init__(self):
+        self.a = 0.3
+    def getHumidity(self):
+        return self.a
+esp = ESP32()
+if (not MODE_NO_ESP32): esp = esp32.ESP32("192.168.1.148", 9008)
+>>>>>>> b246cf11ecd29cef8eb700780ea316e3fd57f8ee
 
 add_plant_request = False
 action_in_progress = False
@@ -71,9 +89,47 @@ def on_message(data):
 
 @sio.on('[ADD_PLANT]')
 def on_message(data):
+<<<<<<< HEAD
     global action_in_progress
     global add_plant_request
     add_plant_request = True
+=======
+    print("Moving UR to empty pot")
+
+    qr_content = []
+    while (len(qr_content) == 0):
+        qr_content = esp.getQR()
+
+        if (abort_plant):
+            print("moving UR to home")
+            abort_plant = False
+            return
+
+    np = decodeQR(qr_content[0], data)
+    nm = {
+        "id": db.getLastPlantAdded(),
+        "humidity": {
+            "time": datetime.datetime.now() - datetime.timedelta(seconds=np["moisture_period"]),
+            "value": 0
+            },
+        "watering": {
+            "time": datetime.datetime.now() - datetime.timedelta(seconds=np["moisture_period"]),
+            "value": 0
+            },
+        "image": datetime.datetime.now() - datetime.timedelta(seconds=np["photo_period"]),
+    }
+
+    plantsInfo.append(np)
+    lastMeasureInfo.append(nm)
+
+    db.addPlant(np["name"], np["pot_number"], np["since"], np["watering_time"], np["moisture_threshold"], np["moisture_period"], np["photo_period"])
+    db.addWateringValue(nm["watering"]["time"], nm["id"], nm["watering"]["value"])
+    db.addHumidityValue(nm["humidity"]["time"], nm["id"], nm["humidity"]["value"])
+
+    noplant = False
+
+    sio.emit('QRReading', db.getLastPK())
+>>>>>>> b246cf11ecd29cef8eb700780ea316e3fd57f8ee
     return
 
 @sio.event
@@ -86,7 +142,7 @@ def disconnect():
 
 #TODO: fer la funció a partir del string generat pel QR
 """Exemple: http://www.weeplant.es:80/?name=deictics_plant&watering_time=10&moisture_threshold=.2&moisture_period=60&photo_period=500"""
-def decodeQR(code):
+def decodeQR(code, potNum):
     code = code.split("?")[1]
     attributesAux = code.split("&")
     attributes = []
@@ -100,18 +156,22 @@ def decodeQR(code):
             try:
                 aux[1] = float(aux[1])
             except:
+<<<<<<< HEAD
                 pass
 
+=======
+                """"""
+>>>>>>> b246cf11ecd29cef8eb700780ea316e3fd57f8ee
         attributes.append([aux[0], aux[1]])
 
     return {
         "name": attributes[0][1],
-        "pot_number": attributes[1][1],
+        "pot_number": potNum,
         "since": "'" + str(datetime.datetime.now()) + "'",
-        "watering_time": attributes[2][1],
-        "moisture_threshold": attributes[3][1],
-        "moisture_period": attributes[4][1],
-        "photo_period": attributes[5][1]
+        "watering_time": attributes[1][1],
+        "moisture_threshold": attributes[2][1],
+        "moisture_period": attributes[3][1],
+        "photo_period": attributes[4][1]
     }
 
 def requestTimings(db):
@@ -258,6 +318,7 @@ def takePicture(plant_id):
     colour = [color1, color2, color3]
     time = datetime.datetime.now()
 
+<<<<<<< HEAD
     path = "images/" + str(plant_id) + "_(" + str(time) + ").jpg"
 
     esp.getImage(path)
@@ -267,6 +328,10 @@ def takePicture(plant_id):
     db.addImage(time, plant_id, open(path, 'rb').read(), 70, colour)
 
     #db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg",'rb').read(),5,[233,222,222])
+=======
+    ## TODO:
+    info = getPlantData("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
+>>>>>>> b246cf11ecd29cef8eb700780ea316e3fd57f8ee
 
     '''
     aux = []
@@ -274,9 +339,14 @@ def takePicture(plant_id):
         aux.append([])
         for j in range(255): aux[i].append(j)
 
+<<<<<<< HEAD
     if (plant_id != 2): db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpg",'rb').read(),5, aux)
     else: db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpeg",'rb').read(),5, aux)
     '''
+=======
+    db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
+
+>>>>>>> b246cf11ecd29cef8eb700780ea316e3fd57f8ee
     return
 
 def add_plant():
