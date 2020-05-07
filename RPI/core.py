@@ -9,11 +9,11 @@ from robot import UR
 import db as database
 import time
 import datetime
-import esp32
+import fakeesp32
 import plant
 #from gpiozero import OutputDevice
 
-MODE_NO_ESP32 = False
+MODE_NO_ESP32 = True
 
 sio = socketio.Client()
 db = database.WeePlantDB()
@@ -24,9 +24,7 @@ class ESP32:
     def getHumidity(self):
         return self.a
 esp = ESP32()
-
-if (not MODE_NO_ESP32):
-    esp = esp32.ESP32("192.168.1.148", 9008)
+if (not MODE_NO_ESP32): esp = esp32.ESP32("192.168.1.148", 9008)
 
 
 running = True
@@ -59,7 +57,7 @@ def on_message(data):
 
 @sio.on('[ADD_PLANT]')
 def on_message(data):
-    print("Moving UR to addition pose")
+    print("Moving UR to empty pot")
 
     qr_content = []
     while (len(qr_content) == 0):
@@ -70,7 +68,7 @@ def on_message(data):
             abort_plant = False
             return
 
-    np = decodeQR(qr_content[0])
+    np = decodeQR(qr_content[0], data)
     nm = {
         "id": db.getLastPlantAdded(),
         "humidity": {
@@ -106,7 +104,7 @@ def disconnect():
 
 #TODO: fer la funció a partir del string generat pel QR
 """Exemple: http://www.weeplant.es:80/?name=deictics_plant&watering_time=10&moisture_threshold=.2&moisture_period=60&photo_period=500"""
-def decodeQR(code):
+def decodeQR(code, potNum):
     code = code.split("?")[1]
     attributesAux = code.split("&")
     attributes = []
@@ -120,17 +118,17 @@ def decodeQR(code):
             try:
                 aux[1] = float(aux[1])
             except:
-
+                """"""
         attributes.append([aux[0], aux[1]])
 
     return {
         "name": attributes[0][1],
-        "pot_number": attributes[1][1],
+        "pot_number": potNum,
         "since": "'" + str(datetime.datetime.now()) + "'",
-        "watering_time": attributes[2][1],
-        "moisture_threshold": attributes[3][1],
-        "moisture_period": attributes[4][1],
-        "photo_period": attributes[5][1]
+        "watering_time": attributes[1][1],
+        "moisture_threshold": attributes[2][1],
+        "moisture_period": attributes[3][1],
+        "photo_period": attributes[4][1]
     }
 
 def requestTimings(db):
@@ -263,19 +261,14 @@ def takePicture(plant_id):
     esp.getImage("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
 
     ## TODO:
-    ##info = getPlantData()
-
-    ##db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
-
-    #db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg",'rb').read(),5,[233,222,222])
+    info = getPlantData("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
 
     aux = []
     for i in range(3):
         aux.append([])
         for j in range(255): aux[i].append(j)
 
-    if (plant_id != 2): db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpg",'rb').read(),5, aux)
-    else: db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpeg",'rb').read(),5, aux)
+    db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
 
     return
 
