@@ -1,5 +1,6 @@
 package CasiControladores;
 
+import Vistas.WeePlantArm_3D_View;
 import com.sun.org.apache.xalan.internal.xsltc.trax.OutputSettings;
 import jdk.internal.util.xml.impl.Input;
 
@@ -56,11 +57,16 @@ public class Reciever extends Thread {
                         String[] d = data.split("[.]");
                         System.out.println("Rebut " + d.length);
 
-                        //Blocking untill it reaches the goal!s
-                        animatorController.updateMotors(d);
-                        writer.append("Vamos!");
-                        writer.flush();
+                        if(data.charAt(0) == '#'){
+                            int potToAdd = Integer.parseInt(String.valueOf(data.charAt(1)));
+                            WeePlantArm_3D_View.addPot(potToAdd);
+                        }else{
+                            //Blocking untill it reaches the goal!s
+                            animatorController.updateMotors(d);
 
+                            writer.append("Vamos!");
+                            writer.flush();
+                        }
                     }else {
                         break;
                     }

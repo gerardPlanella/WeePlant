@@ -44,6 +44,7 @@
 
 
 #define LED_PIN 33
+#define FLASH_PIN 4
 #define SDA_PIN 2
 #define SCL_PIN 14
 
@@ -62,8 +63,8 @@ const char* WiFiPassword = "ur_hack_la_salle";
 #endif
 
 
-const uint16_t port = 9000;
-const char * host = "192.168.1.34";
+const uint16_t port = 8018;
+const char * host = "192.168.1.36";
 
 const float ADC_MULTIPLIER = 0.1875F; /* ADS1115  @ +/- 6.144V gain (16-bit results) */
 const float HUMIDITY_CONVERSION = 10.0F;
@@ -87,6 +88,7 @@ void setup() {
 
   Serial.begin(9600);
 
+  pinMode(FLASH_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
 
   camera_config_t config;
@@ -131,7 +133,9 @@ void setup() {
 
   connectWiFi();
   while (connectToHost() < 0) {
-    delay(100);
+    digitalWrite(LED_PIN, HIGH);
+    delay(2000);
+    digitalWrite(LED_PIN, LOW);
     PRINTLN("Waiting for Server");
   }
 
@@ -153,6 +157,8 @@ void loop() {
   camera_fb_t *fb = NULL;
   char data_read[MAXC];
   int option;
+
+
 
   /* for(i = 0; i < 10; i++){
      digitalWrite(LED_PIN, toggle);
@@ -257,7 +263,10 @@ int connectToHost() {
 }
 
 int takePicture(camera_fb_t ** fb) {
+  digitalWrite(FLASH_PIN, HIGH);
+  delay(50);
   *fb = esp_camera_fb_get();
+  digitalWrite(FLASH_PIN, LOW);
   if (!(*fb)) return -1;
   return 0;
 }
@@ -265,30 +274,33 @@ int takePicture(camera_fb_t ** fb) {
 int sendImage(WiFiClient client, camera_fb_t * fb) {
   size_t length = 0;
   int ok = 0;
+  int total = 0;
 
 
   PRINT("Length to send: ");
   PRINTLN(fb->len);
 
-  do {
-    client.print(fb->len);
-    while (client.available() <= 0) {
-      delay(100);
-      PRINTLN("Waiting for availability");
+ 
+  client.print(fb->len);
+  while (client.available() <= 0) {
+    delay(100);
+    PRINTLN("Waiting for availability");
+  }
+  ok = client.read();
+  
+ do{
+    while (total < fb->len){
+      length = client.write((fb->buf + total), (fb->len - total));
+      total += length;
     }
-    ok = client.read();
-    length = client.write(fb->buf, fb->len);
-    if (length >= fb->len) {
-      while (client.available() <= 0) {
+    
+    PRINT("Length Sent");
+    PRINTLN(length);
+    while (client.available() <= 0) {
         delay(100);
         PRINTLN("Waiting for availability");
-      }
-      ok = client.read();
-    } else {
-      PRINT("[ERROR]Length sent: ");
-      PRINTLN(length);
-      return -1;
     }
+    ok = client.read();
   } while (ok == 0);
 
 

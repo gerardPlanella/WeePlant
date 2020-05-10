@@ -424,7 +424,7 @@ class WeePlantDB():
         return resultat
 
     # Funció per afegir una nova mostra d'humitat
-    def addHumidityMeasure(self, time, plant_id, value):
+    def addHumidityValue(self, time, plant_id, value):
         # Obtenim l'objecte que permet executar les queries
         cursor = self.conn.cursor()
         cursor.execute("""INSERT INTO Humidity (time, plant_ID, value)
@@ -478,16 +478,25 @@ class WeePlantDB():
         cursor.close()
 
 
-db = WeePlantDB()
+def restartAllAndAddTestData():
+    db = WeePlantDB()
+    db.resetTables()
+    #db.addTestData2()
+
+restartAllAndAddTestData()
+
+
+
+
 #db.printTable("imatge")
 
 #print(db.getHumidityLog(2))
 
-db.resetTables()
-db.addTestData2()
+#
+#
 #print(db.getImages(1))
 #print(db.getPlant(1))
 #db.printTable('humidity')
-db.closeDB()
+#db.closeDB()
 
 #

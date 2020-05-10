@@ -6,6 +6,9 @@ import json
 import os
 from plantcv import plantcv as pcv
 
+ROI_X = 0.2
+ROI_Y = 0.2
+
 class Plant():
     __slots__ = ["debug", "output_dir", "image_path", "write_image_output", "result_path", "data", "data_ready", "write_result"]
 
@@ -37,6 +40,12 @@ class Plant():
         pcv.params.debug_outdir = self.output_dir
 
         img, path, filename = pcv.readimage(filename=self.image_path)
+        height, width = img.shape[:2]
+
+        roi_x = int(width * ROI_X)
+        roi_y = int(height * ROI_Y )
+
+        
 
         # Convert RGB to HSV and extract the saturation channel
         s = pcv.rgb2gray_hsv(rgb_img=img, channel='s')
@@ -56,7 +65,7 @@ class Plant():
         b_cnt = pcv.threshold.binary(gray_img=b, threshold=160, max_value=255, object_type='light')
 
         # Fill small objects
-        # b_fill = pcv.fill(b_thresh, 10)
+        #b_fill = pcv.fill(b_thresh, 10)
 
         # Join the thresholded saturation and blue-yellow images
         bs = pcv.logical_or(bin_img1=s_mblur, bin_img2=b_cnt)
@@ -87,7 +96,7 @@ class Plant():
         id_objects, obj_hierarchy = pcv.find_objects(img=masked2, mask=ab_fill)
 
         # Define ROI
-        roi1, roi_hierarchy= pcv.roi.rectangle(img=masked2, x=100, y=100, h=200, w=200)
+        roi1, roi_hierarchy= pcv.roi.rectangle(img=masked2, x=roi_x, y=roi_y, h=int((height * (1-ROI_Y))), w=int((width * (1-ROI_X))))
 
         # Decide which objects to keep
         roi_objects, hierarchy3, kept_mask, obj_area = pcv.roi_objects(img=img, roi_contour=roi1, 
@@ -96,36 +105,43 @@ class Plant():
                                                                 obj_hierarchy=obj_hierarchy,
                                                                 roi_type='partial')
 
-        # Object combine kept objects
-        obj, mask = pcv.object_composition(img=img, contours=roi_objects, hierarchy=hierarchy3)
 
-        ############### Analysis ################
+        if(len(roi_objects)):
+            # Object combine kept objects
+            obj, mask = pcv.object_composition(img=img, contours=roi_objects, hierarchy=hierarchy3)
 
-        # Find shape properties, output shape image (optional)
-        shape_imgs = pcv.analyze_object(img=img, obj=obj, mask=mask)
 
-        # Shape properties relative to user boundary line (optional)
-        boundary_img1 = pcv.analyze_bound_horizontal(img=img, obj=obj, mask=mask, line_position=1680)
+            ############### Analysis ################
 
-        outfile=False
-        if self.write_image_output == True:
-            outfile = self.output_dir + "/" + filename
-            cv2.imwrite(outfile,boundary_img1)
+            # Find shape properties, output shape image (optional)
+            shape_imgs = pcv.analyze_object(img=img, obj=obj, mask=mask)
 
-        # Determine color properties: Histograms, Color Slices, output color analyzed histogram (optional)
-        color_histogram = pcv.analyze_color(rgb_img=img, mask=kept_mask, hist_plot_type="rgb")
-        
-        # Pseudocolor the grayscale image
-        pseudocolored_img = pcv.visualize.pseudocolor(gray_img=s, mask=kept_mask, cmap="jet")
+            # Shape properties relative to user boundary line (optional)
+            boundary_img1 = pcv.analyze_bound_horizontal(img=img, obj=obj, mask=mask, line_position=int(height*(1-ROI_Y)))
 
-        # Write shape and color data to results file
-        pcv.print_results(filename=self.result_path)
+            outfile=False
+            if self.write_image_output == True:
+                outfile = self.output_dir + "/" + filename
+                cv2.imwrite(outfile, boundary_img1)
 
-        with open(self.result_path) as f:
-            self.data = json.load(f)
-            if not self.write_result: 
-                os.remove(self.result_path)
-            self.data_ready = True
+            # Determine color properties: Histograms, Color Slices, output color analyzed histogram (optional)
+            color_histogram = pcv.analyze_color(rgb_img=img, mask=kept_mask, hist_plot_type="rgb")
+            
+            # Pseudocolor the grayscale image
+            pseudocolored_img = pcv.visualize.pseudocolor(gray_img=s, mask=kept_mask, cmap="jet")
+
+            # Write shape and color data to results file
+            pcv.print_results(filename=self.result_path)
+
+            with open(self.result_path) as f:
+                self.data = json.load(f)
+                if not self.write_result: 
+                    os.remove(self.result_path)
+                self.data_ready = True
+        else:
+            self.data_ready = False
+            print("No plant has been found")
+            
         
     def getHeight(self):
         if self.data_ready:
@@ -150,11 +166,12 @@ class Plant():
     
       
 if __name__ == '__main__':
-    plant = Plant(image_path="plant_2.jpeg", write_image_output=True,result_path= "./temp/plant_info.json", write_result=True)
+
+    plant = Plant(image_path="test4.png", write_image_output=True,result_path= "./temp/plant_info.json", write_result=True)
     
     plant.calculate()
 
-    if plant.isFramed() is True:
+    if True:
         height = plant.getHeight()
         width = plant.getWidth()
 
@@ -165,6 +182,7 @@ if __name__ == '__main__':
         (red, green, blue) = plant.getColourHistogram()
 
         if (red != green) and (green != blue) and (blue != False) :
+            """
             print("-------- RED --------\n\n")
             print(json.dumps(red, indent=4, sort_keys=True) + "\n")
 
@@ -173,6 +191,7 @@ if __name__ == '__main__':
 
             print("-------- BLUE --------\n\n")
             print(json.dumps(blue, indent=4, sort_keys=True) + "\n")
+            """
         
         """
             #e.g: to get the y axis of the colour red:
@@ -191,8 +210,9 @@ if __name__ == '__main__':
             #e.g to get the first label
             first_red_label = red["label"][0]
             print("First red label " + str(first_red_label) + "\n")
-        """
-
+      """
+    else:
+        print("Plant Not Framed!")
 
 
 

@@ -2,6 +2,7 @@ import random
 
 class esp32:
     __init__(self):
+        pass
 
 
     def getHumidity():
