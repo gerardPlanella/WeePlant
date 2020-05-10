@@ -9,7 +9,8 @@ from robot import UR
 import db as database
 import time
 import datetime
-import fakeesp32
+#import fakeesp32
+import esp32
 import plant
 #from gpiozero import OutputDevice
 
@@ -305,10 +306,10 @@ def main():
 
 if __name__ == '__main__':
 
-    #sio.connect('http://www.weeplant.es:80')
-    sio.connect('http://localhost:2000')
+    sio.connect('http://www.weeplant.es:80')
+    #sio.connect('http://localhost:2000')
 
-    #main()
+    main()
 
     """
     if esp.connect() is True:
