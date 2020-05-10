@@ -1,4 +1,3 @@
-import com_URScript as script
 import socket
 import time
 import math as m
