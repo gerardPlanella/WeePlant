@@ -9,23 +9,22 @@ from robot import UR
 import db as database
 import time
 import datetime
-<<<<<<< HEAD
-#import fakeesp32
 import esp32
-import plant
-#from gpiozero import OutputDevice
-=======
-import esp32 
 import signal
 import sys
->>>>>>> 809604bd49c7c6f6cc63d49463138cf133a34afe
 
 import plant
 from sim_robot import UR_SIM
 
-MODE_ESP32 = True
+MODE_ESP32 = False
+
+DEFAULT_HUMIDITY_NOESP32 = 0.5
+DEFAULT_PATH_IMAGE_NOESP32 = "fakeImages/1.jpg"
 
 TOOL_ATTEMPTS = 5
+
+UR_SIM_IP = "25.120.137.245"
+UR_SIM_PORT = 25852
 
 add_plant_request = False
 action_in_progress = False
@@ -37,8 +36,7 @@ abort_plant = False
 plantsInfo = []
 lastMeasureInfo = []
 
-UR_SIM_IP = "25.120.137.245"
-UR_SIM_PORT = 25852
+working_pot = -1
 
 sio = socketio.Client()
 db = database.WeePlantDB()
@@ -60,7 +58,7 @@ def signal_handler(sig, frame):
         esp.disconnect()
     if sio is not None:
         sio.disconnect()
-    
+
     sys.exit(0)
 
 @sio.on('newPotPython')
@@ -91,11 +89,12 @@ def on_message(data):
     global add_plant_request
     global noplant
     global plantsInfo
+    global working_pot
 
-    if(noplant):
+    working_pot = int(data)
+
+    if (noplant):
         add_plant()
-        
-        noplant = False
     else:
         add_plant_request = True
     return
@@ -130,12 +129,12 @@ def decodeQR(code):
 
     return {
         "name": attributes[0][1],
-        "pot_number": attributes[1][1],
         "since": "'" + str(datetime.datetime.now()) + "'",
-        "watering_time": attributes[2][1],
-        "moisture_threshold": attributes[3][1],
-        "moisture_period": attributes[4][1],
-        "photo_period": attributes[5][1]
+        "plant_ID": -1,
+        "watering_time": attributes[1][1],
+        "moisture_threshold": attributes[2][1],
+        "moisture_period": attributes[3][1],
+        "photo_period": attributes[4][1]
     }
 
 def requestTimings(db):
@@ -150,12 +149,16 @@ def requestTimings(db):
 def requestTimestamps(db, plantsInfo):
     ret = []
     for p in plantsInfo:
-        ret.append({
+        aux = {
             "id": p["plant_ID"],
             "humidity": db.getHumidityLast(p["plant_ID"]),
             "watering": db.getWateringLast(p["plant_ID"]),
             "image": db.getImageLastTime(p["plant_ID"])
-        })
+        }
+        ret.append(aux)
+        print(p['plant_ID'])
+        print(aux)
+
     return ret
 
 def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
@@ -208,12 +211,16 @@ def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
 
 def doMeasure(plant_id, plantsInfo):
     global TOOL_ATTEMPTS
+    global DEFAULT_HUMIDITY_NOESP32
+    global MODE_ESP32
 
     print("moving UR to humidity tool to check plant " + str(plant_id))
 
     attempts = TOOL_ATTEMPTS
 
-    value = esp.getHumidity()
+    if (MODE_ESP32): value = esp.getHumidity()
+    else: value = DEFAULT_HUMIDITY_NOESP32
+
     while (value == 0):
         if attempts == 0:
             print("moving UR to home")
@@ -226,7 +233,8 @@ def doMeasure(plant_id, plantsInfo):
         value = esp.getHumidity()
 
     print("move UR from tool to plant " + str(plant_id))
-    value = esp.getHumidity()
+    if (MODE_ESP32): value = esp.getHumidity()
+    else: value = DEFAULT_HUMIDITY_NOESP32
 
     print("UR leaves the tool")
     db.addHumidityValue(datetime.datetime.now(), plant_id, value)
@@ -265,9 +273,10 @@ def getPlantData(path):
 
 def takePicture(plant_id):
     global esp
+    global MODE_ESP32
+    global DEFAULT_PATH_IMAGE_NOESP32
     print("moving UR to plant " + str(plant_id))
 
-    
     color1 = []
     color2 = []
     color3 = []
@@ -283,25 +292,15 @@ def takePicture(plant_id):
     colour = [color1, color2, color3]
     time = datetime.datetime.now()
 
-    path = "images/" + str(plant_id) + "_(" + str(time) + ").jpg"
+    if (MODE_ESP32): path = "images/" + str(plant_id) + "_(" + str(time) + ").jpg"
+    else: path = DEFAULT_PATH_IMAGE_NOESP32
 
-    esp.getImage(path)
+    if (MODE_ESP32): esp.getImage(path)
 
+    # This is for the PlantCV Library
     #info = getPlantData("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
 
     db.addImage(time, plant_id, open(path, 'rb').read(), 70, colour)
-
-    #db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg",'rb').read(),5,[233,222,222])
-
-    '''
-    aux = []
-    for i in range(3):
-        aux.append([])
-        for j in range(255): aux[i].append(j)
-
-    if (plant_id != 2): db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpg",'rb').read(),5, aux)
-    else: db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpeg",'rb').read(),5, aux)
-    '''
 
     #db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
     return
@@ -310,21 +309,28 @@ def add_plant():
     global abort_plant
     global plantsInfo
     global noplant
+    global working_pot
 
     print("Moving UR to addition pose")
-    qr_content = []
-    while (len(qr_content) == 0):
+    np = ""
+    if (MODE_ESP32):
+        qr_content = []
 
-        qr_content = esp.getQR()
+        while (len(qr_content) == 0):
 
-        if (abort_plant):
-            print("moving UR to home")
-            abort_plant = False
-            return
+            qr_content = esp.getQR()
 
-    np = decodeQR(qr_content[0])
+            if (abort_plant):
+                print("moving UR to home")
+                abort_plant = False
+                return
 
-    id = db.addPlant(np["name"], np["pot_number"], np["since"], np["watering_time"], np["moisture_threshold"], np["moisture_period"], np["photo_period"])
+        np = decodeQR(qr_content[0])
+    else:
+        np = decodeQR("http://www.weeplant.es:80/?name=deictics_plant&watering_time=10&moisture_threshold=.2&moisture_period=60&photo_period=500")
+
+    id = db.addPlant(np["name"], working_pot, np["since"], np["watering_time"], np["moisture_threshold"], np["moisture_period"], np["photo_period"])
+    np['plant_ID'] = id
 
     nm = {
         "id": id,
@@ -336,20 +342,21 @@ def add_plant():
             "time": datetime.datetime.now() - datetime.timedelta(seconds=np["moisture_period"]),
             "value": 0
             },
-        "image": datetime.datetime.now() - datetime.timedelta(seconds=np["photo_period"]),
+        "image": datetime.datetime.now() - datetime.timedelta(seconds=np["photo_period"])
     }
 
     plantsInfo.append(np)
     lastMeasureInfo.append(nm)
 
-    
     db.addWateringValue(nm["watering"]["time"], id, nm["watering"]["value"])
     db.addHumidityValue(nm["humidity"]["time"], id, nm["humidity"]["value"])
 
     noplant = False
 
-    sio.emit('QRReading', db.getLastPK())
-    
+    pk = db.getLastPK()
+    print("PK to web: " + str(pk))
+    sio.emit('QRReading', pk)
+
 
 def UR_home():
     print("UR going to home position")
@@ -360,6 +367,7 @@ def main():
     global running
     global noplant
     global lastMeasureInfo
+    global plantsInfo
 
     plantsInfo = requestTimings(db)
     if (len(plantsInfo) == 0): noplant = True
@@ -372,11 +380,13 @@ def main():
 
         lastMeasureInfo = requestTimestamps(db, plantsInfo)
 
-        UR_home()
+        #UR_home()
+        print(plantsInfo)
+        print(lastMeasureInfo)
 
         nextMeasure = getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo)
 
-        print("Waiting until: " + str(nextMeasure))
+        #print("Waiting until: " + str(nextMeasure))
         if (nextMeasure["time"] > 0): time.sleep(nextMeasure["time"])
 
         action_in_progress = True
@@ -392,19 +402,17 @@ def main():
             add_plant_request = False
 
         #print(nextMeasure)
-        print("\n" + "-"*80 + "\n")
+        #print("\n" + "-"*80 + "\n")
         #sio.wait()
 
     db.closeDB()
 
 if __name__ == '__main__':
 
-    sio.connect('http://www.weeplant.es:80')
-<<<<<<< HEAD
-=======
+    #sio.connect('http://www.weeplant.es:80')
+    sio.connect('http://25.120.137.245:2000')
     signal.signal(signal.SIGINT, signal_handler)
     print("We Alive!")
->>>>>>> 809604bd49c7c6f6cc63d49463138cf133a34afe
     #sio.connect('http://localhost:2000')
 
     main()
