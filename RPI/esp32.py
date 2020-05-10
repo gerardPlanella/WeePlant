@@ -145,6 +145,7 @@ class ESP32():
             # loop over the detected barcodes
             i = 0
             for barcode in barcodes:
+                print("putaso")
                 barcodeData = barcode.data.decode("utf-8")
                 barcodeType = barcode.type
                 if(barcodeType == "QRCODE"):

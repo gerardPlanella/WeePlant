@@ -83,9 +83,11 @@ def on_message(data):
     global action_in_progress
     global add_plant_request
     global noplant
-    
+    global plantsInfo
+
     if(noplant):
         add_plant()
+        
         noplant = False
     else:
         add_plant_request = True
@@ -150,9 +152,9 @@ def requestTimestamps(db, plantsInfo):
     return ret
 
 def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
-    min = datetime.datetime.now()
+    pmin = datetime.datetime.now()
     index = -1
-    type = "null"
+    ptype = "null"
 
     for i in range(len(lastMeasureInfo)):
         measure = lastMeasureInfo[i]
@@ -166,33 +168,33 @@ def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
             index = measure["id"]
 
             if (tfnm < aux):
-                min = tfnm
-                type = "humidity"
+                pmin = tfnm
+                ptype = "humidity"
             else:
-                min = aux
-                type = "image"
+                pmin = aux
+                ptype = "image"
 
         else:
-            if (min > tfnm):
-                min = tfnm
+            if (pmin > tfnm):
+                pmin = tfnm
                 index = measure["id"]
-                type = "humidity"
+                ptype = "humidity"
 
-            if (min > aux):
-                min = aux
+            if (pmin > aux):
+                pmin = aux
                 index = measure["id"]
-                type = "image"
+                ptype = "image"
 
     #Time To Wait For Next Measure
     now = datetime.datetime.now()
-    ttwfnm = min - now
+    ttwfnm = pmin - now
     if (now + ttwfnm > now): ttwfnm = ttwfnm.total_seconds()
     else: ttwfnm = 0
 
     ret = {
         "time": ttwfnm,
         "plant": index,
-        "type": type
+        "type": ptype
     }
 
     return ret
@@ -313,8 +315,11 @@ def add_plant():
             return
 
     np = decodeQR(qr_content[0])
+
+    id = db.addPlant(np["name"], np["pot_number"], np["since"], np["watering_time"], np["moisture_threshold"], np["moisture_period"], np["photo_period"])
+
     nm = {
-        "id": db.getLastPlantAdded(),
+        "id": id,
         "humidity": {
             "time": datetime.datetime.now() - datetime.timedelta(seconds=np["moisture_period"]),
             "value": 0
@@ -329,13 +334,14 @@ def add_plant():
     plantsInfo.append(np)
     lastMeasureInfo.append(nm)
 
-    db.addPlant(np["name"], np["pot_number"], np["since"], np["watering_time"], np["moisture_threshold"], np["moisture_period"], np["photo_period"])
-    db.addWateringValue(nm["watering"]["time"], nm["id"], nm["watering"]["value"])
-    db.addHumidityValue(nm["humidity"]["time"], nm["id"], nm["humidity"]["value"])
+    
+    db.addWateringValue(nm["watering"]["time"], id, nm["watering"]["value"])
+    db.addHumidityValue(nm["humidity"]["time"], id, nm["humidity"]["value"])
 
     noplant = False
 
     sio.emit('QRReading', db.getLastPK())
+    
 
 def UR_home():
     print("UR going to home position")
