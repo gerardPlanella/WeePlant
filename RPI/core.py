@@ -30,13 +30,13 @@ abort_plant = False
 plantsInfo = []
 lastMeasureInfo = []
 
-UR_SIM_IP = "localhost"
+UR_SIM_IP = "25.120.137.245"
 UR_SIM_PORT = 25852
 
 sio = socketio.Client()
 db = database.WeePlantDB()
 
-#ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
+ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
 
 if (MODE_ESP32):
     esp = esp32.ESP32("192.168.1.36", 8018)
