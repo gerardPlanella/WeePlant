@@ -76,6 +76,7 @@ def on_message(data):
 @sio.on('[CHANGE_CONFIG]')
 def on_message(data):
     global plantsInfo
+    print("[WEB] Update local info")
     plantsInfo = requestTimings(db)
 
 @sio.on('[ABORT_PLANT]')
@@ -172,7 +173,8 @@ def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
 
         #TimeForNextMeasure
         tfnm = measure["humidity"]["time"] + datetime.timedelta(seconds=plant["moisture_period"])
-        aux = measure["image"] + datetime.timedelta(seconds=plant["photo_period"])
+        if (measure["image"] != -1): aux = measure["image"] + datetime.timedelta(seconds=plant["photo_period"])
+        else: aux = datetime.datetime.now()
 
         if (index < 0):
             index = measure["id"]
@@ -345,6 +347,10 @@ def add_plant():
         "image": datetime.datetime.now() - datetime.timedelta(seconds=np["photo_period"])
     }
 
+    print("-"*50)
+    print(nm)
+    print("-"*50)
+
     plantsInfo.append(np)
     lastMeasureInfo.append(nm)
 
@@ -378,11 +384,18 @@ def main():
 
     while (running):
 
+        print("#"*50)
+        print(plantsInfo)
+
         lastMeasureInfo = requestTimestamps(db, plantsInfo)
 
         #UR_home()
+        print("#"*50)
         print(plantsInfo)
-        print(lastMeasureInfo)
+        #print(lastMeasureInfo)
+
+        print("#"*50)
+        print(plantsInfo)
 
         nextMeasure = getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo)
 
