@@ -17,6 +17,7 @@ import plant
 from sim_robot import UR_SIM
 
 MODE_ESP32 = False
+MODE_UR_SIM = False
 
 TOOL_ATTEMPTS = 5
 
@@ -36,7 +37,9 @@ UR_SIM_PORT = 25852
 sio = socketio.Client()
 db = database.WeePlantDB()
 
-#ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
+
+if (MODE_UR_SIM):
+    ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
 
 if (MODE_ESP32):
     esp = esp32.ESP32("192.168.1.36", 8014)
@@ -44,7 +47,6 @@ if (MODE_ESP32):
         print("Connection Error")
     else:
         print("Connection Established")
-
 
 
 def signal_handler(sig, frame):
@@ -90,6 +92,7 @@ def on_message(data):
         qr_content = esp.getQR()
 
         if (abort_plant):
+            ur_sim.move("home",20,20)
             print("moving UR to home")
             abort_plant = False
             return
