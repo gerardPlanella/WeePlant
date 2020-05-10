@@ -290,7 +290,6 @@ def takePicture(plant_id):
     global esp
     print("moving UR to plant " + str(plant_id))
 
-    
     color1 = []
     color2 = []
     color3 = []

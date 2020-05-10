@@ -481,9 +481,9 @@ class WeePlantDB():
 def restartAllAndAddTestData():
     db = WeePlantDB()
     db.resetTables()
-    db.addTestData2()
+    #db.addTestData2()
 
-#restartAllAndAddTestData()
+restartAllAndAddTestData()
 
 
 
