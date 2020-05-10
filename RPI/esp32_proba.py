@@ -20,7 +20,7 @@ IMAGE = 1
 HUMIDITY = 2
 EXIT = 3
 
-BURST_SIZE = 200
+BURST_SIZE = 500
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -29,7 +29,7 @@ QR_TMP = "./tmp/qr_tmp.jpeg"
 qr_count = 0
 
 HOST = '192.168.1.36' 
-PORT = 8017
+PORT = 8014
 
 class ESP32():
     __slots__ = ('sock', 'conn', 'addr', 'port', 'connected')

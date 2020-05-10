@@ -17,7 +17,7 @@ import plant
 from sim_robot import UR_SIM
 
 MODE_ESP32 = False
-MODE_UR_SIM = False
+#MODE_UR_SIM = False
 
 TOOL_ATTEMPTS = 5
 
@@ -31,18 +31,17 @@ abort_plant = False
 plantsInfo = []
 lastMeasureInfo = []
 
-UR_SIM_IP = "localhost"
+UR_SIM_IP = "25.120.137.245"
 UR_SIM_PORT = 25852
 
 sio = socketio.Client()
 db = database.WeePlantDB()
 
-
-if (MODE_UR_SIM):
-    ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
+#if (MODE_UR_SIM):
+ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
 
 if (MODE_ESP32):
-    esp = esp32.ESP32("192.168.1.36", 8014)
+    esp = esp32.ESP32("192.168.1.36", 8018)
     if(not esp.connect()):
         print("Connection Error")
     else:
@@ -85,6 +84,7 @@ def on_message(data):
     global action_in_progress
     global add_plant_request
     add_plant_request = True
+
     print("Moving UR to empty pot")
 
     qr_content = []
@@ -287,6 +287,7 @@ def getPlantData(path):
     return ret
 
 def takePicture(plant_id):
+    global esp
     print("moving UR to plant " + str(plant_id))
 
     
@@ -325,7 +326,7 @@ def takePicture(plant_id):
     else: db.addImage(time, plant_id, open("images/" + str(plant_id) + ".jpeg",'rb').read(),5, aux)
     '''
 
-    db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
+    #db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
     return
 
 def add_plant():
@@ -419,10 +420,10 @@ def main():
 
 if __name__ == '__main__':
 
-    #sio.connect('http://www.weeplant.es:80')
+    sio.connect('http://www.weeplant.es:80')
     signal.signal(signal.SIGINT, signal_handler)
     print("We Alive!")
-    sio.connect('http://localhost:2000')
+    #sio.connect('http://localhost:2000')
 
     main()
 

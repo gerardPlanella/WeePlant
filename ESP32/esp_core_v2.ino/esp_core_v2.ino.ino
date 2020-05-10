@@ -63,7 +63,7 @@ const char* WiFiPassword = "ur_hack_la_salle";
 #endif
 
 
-const uint16_t port = 8018;
+const uint16_t port = 8014;
 const char * host = "192.168.1.36";
 
 const float ADC_MULTIPLIER = 0.1875F; /* ADS1115  @ +/- 6.144V gain (16-bit results) */
@@ -273,29 +273,32 @@ int takePicture(camera_fb_t ** fb) {
 
 int sendImage(WiFiClient client, camera_fb_t * fb) {
   size_t length = 0;
+  int packet_length = 500;
+  int n_packets;
+  int last_packet;
+  int total_bytes = 0;
+  int i = 0;
   int ok = 0;
-  int total = 0;
 
 
   PRINT("Length to send: ");
   PRINTLN(fb->len);
 
- 
-  client.print(fb->len);
-  while (client.available() <= 0) {
-    delay(100);
-    PRINTLN("Waiting for availability");
-  }
-  ok = client.read();
-  
- do{
-    while (total < fb->len){
-      length = client.write((fb->buf + total), (fb->len - total));
-      total += length;
+  do {
+    client.print(fb->len);
+    while (client.available() <= 0) {
+      delay(100);
+      PRINTLN("Waiting for availability");
+    }
+    ok = client.read();
+    for(i = 0; i < n_packets; i++){
+      if(i = n_packets - 1){
+        packet_length = fb->len % n_packets;
+      }
+      client.write(fb->buf + total_bytes, packet_length);
+      total_bytes += packet_length;
     }
     
-    PRINT("Length Sent");
-    PRINTLN(length);
     while (client.available() <= 0) {
         delay(100);
         PRINTLN("Waiting for availability");
