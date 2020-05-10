@@ -16,8 +16,7 @@ import sys
 import plant
 from sim_robot import UR_SIM
 
-MODE_ESP32 = False
-#MODE_UR_SIM = False
+MODE_ESP32 = True
 
 TOOL_ATTEMPTS = 5
 
@@ -37,8 +36,7 @@ UR_SIM_PORT = 25852
 sio = socketio.Client()
 db = database.WeePlantDB()
 
-#if (MODE_UR_SIM):
-ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
+#ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
 
 if (MODE_ESP32):
     esp = esp32.ESP32("192.168.1.36", 8018)
@@ -46,6 +44,7 @@ if (MODE_ESP32):
         print("Connection Error")
     else:
         print("Connection Established")
+
 
 
 def signal_handler(sig, frame):
@@ -83,44 +82,13 @@ def on_message(data):
 def on_message(data):
     global action_in_progress
     global add_plant_request
-    add_plant_request = True
-
-    print("Moving UR to empty pot")
-
-    qr_content = []
-    while (len(qr_content) == 0):
-        qr_content = esp.getQR()
-
-        if (abort_plant):
-            ur_sim.move("home",20,20)
-            print("moving UR to home")
-            abort_plant = False
-            return
-
-    np = decodeQR(qr_content[0], data)
-    nm = {
-        "id": db.getLastPlantAdded(),
-        "humidity": {
-            "time": datetime.datetime.now() - datetime.timedelta(seconds=np["moisture_period"]),
-            "value": 0
-            },
-        "watering": {
-            "time": datetime.datetime.now() - datetime.timedelta(seconds=np["moisture_period"]),
-            "value": 0
-            },
-        "image": datetime.datetime.now() - datetime.timedelta(seconds=np["photo_period"]),
-    }
-
-    plantsInfo.append(np)
-    lastMeasureInfo.append(nm)
-
-    db.addPlant(np["name"], np["pot_number"], np["since"], np["watering_time"], np["moisture_threshold"], np["moisture_period"], np["photo_period"])
-    db.addWateringValue(nm["watering"]["time"], nm["id"], nm["watering"]["value"])
-    db.addHumidityValue(nm["humidity"]["time"], nm["id"], nm["humidity"]["value"])
-
-    noplant = False
-
-    sio.emit('QRReading', db.getLastPK())
+    global noplant
+    
+    if(noplant):
+        add_plant()
+        noplant = False
+    else:
+        add_plant_request = True
     return
 
 @sio.event
@@ -388,8 +356,6 @@ def main():
         time.sleep(1)
 
     while (running):
-        
-
 
         lastMeasureInfo = requestTimestamps(db, plantsInfo)
 
