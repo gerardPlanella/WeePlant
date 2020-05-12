@@ -13,25 +13,39 @@ import esp32
 import signal
 import sys
 
+from threading import Lock
+
 import plant
 from sim_robot import UR_SIM
 
+
+
+#************************************************************CONFIGURABLE STUFF************************************************************
+
 MODE_ESP32 = False
+MODE_UR_SIM = True
+USE_LOCALHOST = True
+
+PUMP_TIME = 1
 
 DEFAULT_HUMIDITY_NOESP32 = 0.5
 DEFAULT_PATH_IMAGE_NOESP32 = "fakeImages/1.jpg"
 
-TOOL_ATTEMPTS = 5
-
 UR_SIM_IP = "25.120.137.245"
 UR_SIM_PORT = 25852
 
-add_plant_request = False
-action_in_progress = False
+ESP32_IP = "192.168.1.36"
+ESP32_PORT = 8002
+
+TOOL_ATTEMPTS = 5
+
+#*********************************************************END OF CONFIGURABLE STUFF************************************************************
 
 running = True
 noplant = True
 abort_plant = False
+
+notifyWebToUpdate = False
 
 plantsInfo = []
 lastMeasureInfo = []
@@ -41,63 +55,84 @@ working_pot = -1
 sio = socketio.Client()
 db = database.WeePlantDB()
 
-#ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
+takePhotoMutex = Lock()
+if MODE_UR_SIM:
+    ur_sim = UR_SIM(UR_SIM_IP, UR_SIM_PORT)
+    print("Connected with simulator.")
+else:
+    ur_sim = None
 
 if (MODE_ESP32):
-    esp = esp32.ESP32("192.168.1.36", 8018)
+    esp = esp32.ESP32(ESP32_IP, ESP32_PORT)
     if(not esp.connect()):
-        print("Connection Error")
+        print("Connection with esp32 failed")
     else:
-        print("Connection Established")
+        print("Connection with esp32 established")
+else:
+    esp = None
 
+if USE_LOCALHOST:
+    WEB_HOST ="http://localhost:2000"
+else:
+    WEB_HOST = "http://www.weeplant.es:80"
+
+DEFAULT_QR = [WEB_HOST + "/?name=Coolantus&watering_time=10&moisture_threshold=.2&moisture_period=60&photo_period=500",
+            WEB_HOST + "/?name=Arrousus&watering_time=10&moisture_threshold=.2&moisture_period=30&photo_period=250",
+            WEB_HOST + "/?name=GerSaules&watering_time=10&moisture_threshold=.2&moisture_period=180&photo_period=1000"]
 
 
 def signal_handler(sig, frame):
+    global ur_sim, esp, sio 
+    
     print('Goodbye!')
+
+    if ur_sim is not None:
+        ur_sim.disconnect()
+        
     if esp is not None:
         esp.disconnect()
     if sio is not None:
         sio.disconnect()
+    
+    if takePhotoMutex.locked():
+        takePhotoMutex.release()
 
     sys.exit(0)
-
-@sio.on('newPotPython')
-def on_message(data):
-    #Move the robot and start the QR reading.
-    #ur_sim.move()
-    print("Moving robot to add plant number: " + str(data))
-    #TODO: Actually move the robot.
-    #When the robot is in position get the QR.
-    #TODO: Get the QR code from the robot.
-    #TODO: Update the DB with the new plant
-    #Return to the web the plant PK
-    sio.emit('QRReading', 1)
-
+    
+"""
+Not implemented.
 @sio.on('[CHANGE_CONFIG]')
 def on_message(data):
     global plantsInfo
     print("[WEB] Update local info")
     plantsInfo = requestTimings(db)
+"""
 
-@sio.on('[ABORT_PLANT]')
+@sio.on('[WEB_KNOWS_QR]')
 def on_message(data):
+    global working_pot
+
+    takePhotoMutex.acquire()    
+    working_pot = int(data[0])
+    add_plant(data[1])
+    takePhotoMutex.release()
+
+    
+@sio.on('[ABORT_PLANT]')
+def on_messasge(data):
     global abort_plant
+    print("QR reading aborted. Please type a key to continue.")
+
     abort_plant = True
 
 @sio.on('[ADD_PLANT]')
-def on_message(data):
-    global action_in_progress
-    global add_plant_request
-    global noplant
-    global plantsInfo
-    global working_pot
+def on_msessage(data):
+    global plantsInfo,working_pot,takePhotoMutex
 
+    takePhotoMutex.acquire()
     working_pot = int(data)
-
-    if (noplant):
-        add_plant()
-    else:
-        add_plant_request = True
+    add_plant("")
+    takePhotoMutex.release()
     return
 
 @sio.event
@@ -108,10 +143,8 @@ def connect():
 def disconnect():
     print('disconnected from server')
 
-#TODO: fer la funció a partir del string generat pel QR
-"""Exemple: http://www.weeplant.es:80/?name=deictics_plant&watering_time=10&moisture_threshold=.2&moisture_period=60&photo_period=500"""
-
 def decodeQR(code):
+    """Exemple: http://www.weeplant.es:80/?name=deictics_plant&watering_time=10&moisture_threshold=.2&moisture_period=60&photo_period=500"""
     code = code.split("?")[1]
     attributesAux = code.split("&")
     attributes = []
@@ -139,9 +172,18 @@ def decodeQR(code):
     }
 
 def requestTimings(db):
-    plants = db.getActualPlants()
+    pots,plants = db.getActualPlants()
+
+
+    if MODE_UR_SIM:
+        ur_sim.removeAllPots()
+        ur_sim.move("home")
+        for pot in pots:
+            print("Adding pot " + str(pot))
+            ur_sim.addPot(pot)
 
     ret = []
+    
     for plant in plants:
         ret.append(db.getPlant(plant))
 
@@ -152,20 +194,19 @@ def requestTimestamps(db, plantsInfo):
     for p in plantsInfo:
         aux = {
             "id": p["plant_ID"],
+            "pot_number":db.getPlant(p["plant_ID"])["pot_number"],
             "humidity": db.getHumidityLast(p["plant_ID"]),
             "watering": db.getWateringLast(p["plant_ID"]),
             "image": db.getImageLastTime(p["plant_ID"])
         }
         ret.append(aux)
-        print(p['plant_ID'])
-        print(aux)
-
     return ret
 
 def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
     pmin = datetime.datetime.now()
     index = -1
     ptype = "null"
+    pot_number = -1
 
     for i in range(len(lastMeasureInfo)):
         measure = lastMeasureInfo[i]
@@ -182,20 +223,28 @@ def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
             if (tfnm < aux):
                 pmin = tfnm
                 ptype = "humidity"
+                pot_number = measure["pot_number"]
+
             else:
                 pmin = aux
                 ptype = "image"
+                pot_number = measure["pot_number"]
+                
 
         else:
             if (pmin > tfnm):
                 pmin = tfnm
                 index = measure["id"]
                 ptype = "humidity"
+                pot_number = measure["pot_number"]
+                
 
             if (pmin > aux):
                 pmin = aux
                 index = measure["id"]
                 ptype = "image"
+                pot_number = measure["pot_number"]
+                
 
     #Time To Wait For Next Measure
     now = datetime.datetime.now()
@@ -205,18 +254,26 @@ def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
 
     ret = {
         "time": ttwfnm,
+        "pot_number":pot_number,
         "plant": index,
         "type": ptype
     }
 
     return ret
 
-def doMeasure(plant_id, plantsInfo):
-    global TOOL_ATTEMPTS
-    global DEFAULT_HUMIDITY_NOESP32
-    global MODE_ESP32
+def doMeasure(plant_id, pot_number, plantsInfo):
+    global TOOL_ATTEMPTS, DEFAULT_HUMIDITY_NOESP32,MODE_ESP32, MODE_UR_SIM, notifyWebToUpdate, ur_sim,PUMP_TIME
+    print("****DOING A MEASUREMENT****")
+    print("UR going to humidity tool to check plant pot " + str(pot_number))
+    
+    if MODE_UR_SIM:
+        ur_sim.move("humidity tool before")
 
-    print("moving UR to humidity tool to check plant " + str(plant_id))
+
+    print("UR going to attach humidity tool")
+    
+    if MODE_UR_SIM:
+        ur_sim.move("humidity tool grab")
 
     attempts = TOOL_ATTEMPTS
 
@@ -225,21 +282,49 @@ def doMeasure(plant_id, plantsInfo):
 
     while (value == 0):
         if attempts == 0:
-            print("moving UR to home")
-            print("ERROR: unable to connect to the tool")
-            return False
+            UR_home()
+    
+            
+            print("ERROR: Unable to connect to the tool")
+            return
 
         attempts -= 1
-        print("UR tries to connect again")
+        
+        if MODE_UR_SIM:
+            ur_sim.move("humidity tool before")
+        
+        print("UR tries to connect again to the tool")
+        if MODE_UR_SIM:
+            ur_sim.move("humidity tool grab")
 
         value = esp.getHumidity()
 
-    print("move UR from tool to plant " + str(plant_id))
+
+
+    print("move UR from tool to plant pot " + str(pot_number))
+    
+    if MODE_UR_SIM:
+        ur_sim.move("home")
+        ur_sim.move("pot " + str(pot_number))
+        print("\tMeasuring humidity...")
+        time.sleep(1)
+        ur_sim.move("home")
+    else:
+        print("Measuring humidity...")
+    
     if (MODE_ESP32): value = esp.getHumidity()
     else: value = DEFAULT_HUMIDITY_NOESP32
+    
 
-    print("UR leaves the tool")
+    print("UR leaves the tool in its place")
+    if MODE_UR_SIM:
+        ur_sim.move("humidity tool before")
+        ur_sim.move("humidity tool release")
+
     db.addHumidityValue(datetime.datetime.now(), plant_id, value)
+
+    #sio.emit("REFRESH", working_pot)
+    notifyWebToUpdate = True
 
     plantInfo = plantsInfo[0]
     for plant in plantsInfo:
@@ -248,11 +333,32 @@ def doMeasure(plant_id, plantsInfo):
             break
 
     if (plantInfo["moisture_threshold"] < value):
-        print("UR to watering tool")
-        print("UR to plant " + str(plant_id))
-        print("turn on the pump")
-        print("UR leave the tool")
-
+        
+        
+        if MODE_UR_SIM:
+            print("UR going to grab watering tool")
+            ur_sim.move("watering tool before")
+            ur_sim.move("watering tool grab")
+            ur_sim.move("watering tool before")
+            print("UR going to plant " + str(pot_number))
+            ur_sim.move("home")
+            ur_sim.move("pot " + str(pot_number))
+            print("\tTurn on the pump")
+            time.sleep(PUMP_TIME)
+            print("\tTurn off the pump")
+            print("UR leaves the tool in its place")
+            ur_sim.move("home")
+            ur_sim.move("watering tool before")
+            ur_sim.move("watering tool release")        
+            UR_home()
+        else:
+            print("UR to watering tool")
+            print("UR to plant " + str(pot_number))
+            print("Turn on the pump")
+            time.sleep(PUMP_TIME)
+            print("Turn off the pump")
+            print("UR leaves the tool in its place")
+    print("****END OF MEASUREMENT****")
     return True
 
 def getPlantData(path):
@@ -273,11 +379,16 @@ def getPlantData(path):
         ret["colour"] = [plant.getColourHistogram()[0]["value"], plant.getColourHistogram()[1]["value"], plant.getColourHistogram()[2]["value"]]
     return ret
 
-def takePicture(plant_id):
-    global esp
-    global MODE_ESP32
-    global DEFAULT_PATH_IMAGE_NOESP32
-    print("moving UR to plant " + str(plant_id))
+def takePicture(plant_id, pot_number):
+    global esp, MODE_ESP32, DEFAULT_PATH_IMAGE_NOESP32, notifyWebToUpdate
+    
+    print("****TAKING A PHOTO****")
+    print("UR going to plant " + str(pot_number))
+    
+    if MODE_UR_SIM:
+        ur_sim.move("pot foto " + str(pot_number))
+        print("\tTaking a photo")
+        time.sleep(1)
 
     color1 = []
     color2 = []
@@ -292,48 +403,76 @@ def takePicture(plant_id):
             color3[j].append(int((255*(i+.1)**(-1))%255))
 
     colour = [color1, color2, color3]
-    time = datetime.datetime.now()
+    timee = datetime.datetime.now()
 
-    if (MODE_ESP32): path = "images/" + str(plant_id) + "_(" + str(time) + ").jpg"
+    if (MODE_ESP32): path = "images/" + str(plant_id) + "_(" + str(timee) + ").jpg"
     else: path = DEFAULT_PATH_IMAGE_NOESP32
 
     if (MODE_ESP32): esp.getImage(path)
 
     # This is for the PlantCV Library
-    #info = getPlantData("images/" + str(plant_id) + "_(" + str(time) + ").jpg")
+    #info = getPlantData("images/" + str(plant_id) + "_(" + str(timee) + ").jpg")
 
-    db.addImage(time, plant_id, open(path, 'rb').read(), 70, colour)
+    db.addImage(timee, plant_id, open(path, 'rb').read(), 70, colour)
+    #sio.emit("REFRESH", working_pot)
+    notifyWebToUpdate = True
 
-    #db.addImage(time, plant_id, open("images/" + str(plant_id) + "_(" + str(time) + ").jpg").read(), info["height"], info["colour"])
+    if MODE_UR_SIM:
+        ur_sim.move("home")
+    print("****END OF TAKING A PHOTO****")
+    #db.addImage(timee, plant_id, open("images/" + str(plant_id) + "_(" + str(timee) + ").jpg").read(), info["height"], info["colour"])
     return
 
-def add_plant():
+def abortPlantIfNecessary():
     global abort_plant
-    global plantsInfo
-    global noplant
-    global working_pot
+    if abort_plant:
+        print("Aborting plant addition due to user interaction in the webpage.")
+        abort_plant = False
+        UR_home()
+        #Exit the function
+        return True
+    return False
 
-    print("Moving UR to addition pose")
+def add_plant(qr_ss):
+    global abort_plant, plantsInfo, noplant, working_pot, DEFAULT_QR, MODE_UR_SIM,sio
+
     np = ""
-    if (MODE_ESP32):
-        qr_content = []
 
-        while (len(qr_content) == 0):
+    if(qr_ss != ""):
+        print("Decoding the qr provided trough the webpage")
+        np = decodeQR(qr_ss)
+    else:
 
-            qr_content = esp.getQR()
+        print("UR going to read the QR")
+        if MODE_UR_SIM:
+            ur_sim.move("read QR")
 
-            if (abort_plant):
-                print("moving UR to home")
-                abort_plant = False
+        if (MODE_ESP32):
+            qr_content = []
+
+            while (len(qr_content) == 0):
+
+                qr_content = esp.getQR()
+
+                if (abort_plant):
+                    return
+
+            if abortPlantIfNecessary():
                 return
 
-        np = decodeQR(qr_content[0])
-    else:
-        np = decodeQR("http://www.weeplant.es:80/?name=deictics_plant&watering_time=10&moisture_threshold=.2&moisture_period=60&photo_period=500")
-
+            np = decodeQR(qr_content[0])
+        else:
+            qr_used = DEFAULT_QR[working_pot - 1]
+            np = decodeQR(qr_used)
+            input("Enter a key to \"add a new qr\": \n")
+            if abortPlantIfNecessary():
+                return
+            
+    
+    
     id = db.addPlant(np["name"], working_pot, np["since"], np["watering_time"], np["moisture_threshold"], np["moisture_period"], np["photo_period"])
     np['plant_ID'] = id
-
+    
     nm = {
         "id": id,
         "humidity": {
@@ -347,10 +486,6 @@ def add_plant():
         "image": datetime.datetime.now() - datetime.timedelta(seconds=np["photo_period"])
     }
 
-    print("-"*50)
-    print(nm)
-    print("-"*50)
-
     plantsInfo.append(np)
     lastMeasureInfo.append(nm)
 
@@ -359,21 +494,28 @@ def add_plant():
 
     noplant = False
 
-    pk = db.getLastPK()
-    print("PK to web: " + str(pk))
-    sio.emit('QRReading', pk)
+    sio.emit('QRReading',"")
+
+    if MODE_UR_SIM:
+        ur_sim.addPot(working_pot)
 
 
 def UR_home():
+    global MODE_UR_SIM,ur_sim
+
     print("UR going to home position")
+    if MODE_UR_SIM:
+        ur_sim.move("home")
+
 
 def main():
-    global add_plant_request
-    global action_in_progress
     global running
     global noplant
     global lastMeasureInfo
     global plantsInfo
+    global takePhotoMutex
+    global notifyWebToUpdate
+    global working_pot
 
     plantsInfo = requestTimings(db)
     if (len(plantsInfo) == 0): noplant = True
@@ -384,36 +526,29 @@ def main():
 
     while (running):
 
-        print("#"*50)
-        print(plantsInfo)
-
         lastMeasureInfo = requestTimestamps(db, plantsInfo)
 
-        #UR_home()
-        print("#"*50)
-        print(plantsInfo)
+        #print(plantsInfo)
         #print(lastMeasureInfo)
-
-        print("#"*50)
-        print(plantsInfo)
 
         nextMeasure = getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo)
 
-        #print("Waiting until: " + str(nextMeasure))
-        if (nextMeasure["time"] > 0): time.sleep(nextMeasure["time"])
+        
+        if (nextMeasure["time"] > 0):   
+            print("Waiting until: " + str(nextMeasure))
+            time.sleep(nextMeasure["time"])
+    
+        takePhotoMutex.acquire()
+        
+        if (nextMeasure["type"] in "humidity"): doMeasure(nextMeasure["plant"],nextMeasure["pot_number"], plantsInfo)
+        elif (nextMeasure["type"] in "image"): takePicture(nextMeasure["plant"],nextMeasure["pot_number"])
 
-        action_in_progress = True
+        if notifyWebToUpdate:
+            sio.emit("REFRESH", working_pot)
+            notifyWebToUpdate = False
 
-        OK = True
-        if (nextMeasure["type"] in "humidity"): doMeasure(nextMeasure["plant"], plantsInfo)
-        elif (nextMeasure["type"] in "image"): takePicture(nextMeasure["plant"])
-
-        action_in_progress = False
-
-        if(add_plant_request):
-            add_plant()
-            add_plant_request = False
-
+        takePhotoMutex.release()
+        
         #print(nextMeasure)
         #print("\n" + "-"*80 + "\n")
         #sio.wait()
@@ -422,29 +557,10 @@ def main():
 
 if __name__ == '__main__':
 
-    #sio.connect('http://www.weeplant.es:80')
-    sio.connect('http://25.120.137.245:2000')
+    sio.connect(WEB_HOST)
     signal.signal(signal.SIGINT, signal_handler)
     print("We Alive!")
-    #sio.connect('http://localhost:2000')
 
     main()
 
-    """
-    if esp.connect() is True:
-
-        while True:
-            print("TAKE PICTURE CALL")
-            takePicture(1)
-
-            time.sleep(3)
-    else:
-        print("Not connected.")
-
-    """
-
     sio.wait()
-
-    #ur = UR("192.168.1.104")
-    #ur.get_actual_joint_positions()
-    #ur.moveJoints("Starting position", 0.1, 0.1)

@@ -445,14 +445,6 @@ public class AnimatorController implements ActionListener, ChangeListener, Mouse
         frames.add(lastFrame);
         frames.add(new RobotFrame(newValues));
 
-        if(Integer.parseInt(d[6]) == 1){
-            WeePlantArm_3D_View.pickTool(WeePlantArm_3D_View.TOOL.WATER_TOOL);
-        }else if(Integer.parseInt(d[6]) == 2){
-            WeePlantArm_3D_View.pickTool(WeePlantArm_3D_View.TOOL.SOIL_TOOL);
-        }else if(Integer.parseInt(d[6]) == 3){
-            WeePlantArm_3D_View.pickTool(WeePlantArm_3D_View.TOOL.NONE);
-        }
-
         interpolate(Integer.parseInt(d[1]));
 
         actualFrame = 0;
@@ -464,5 +456,12 @@ public class AnimatorController implements ActionListener, ChangeListener, Mouse
             sleep(100);
         }
 
+        if(Integer.parseInt(d[6]) == 1){
+            WeePlantArm_3D_View.pickTool(WeePlantArm_3D_View.TOOL.WATER_TOOL);
+        }else if(Integer.parseInt(d[6]) == 2){
+            WeePlantArm_3D_View.pickTool(WeePlantArm_3D_View.TOOL.SOIL_TOOL);
+        }else if(Integer.parseInt(d[6]) == 3){
+            WeePlantArm_3D_View.pickTool(WeePlantArm_3D_View.TOOL.NONE);
+        }
     }
 }

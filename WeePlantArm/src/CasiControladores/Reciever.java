@@ -47,6 +47,7 @@ public class Reciever extends Thread {
                 e.printStackTrace();
                 return;
             }
+            WeePlantArm_3D_View.pickTool(WeePlantArm_3D_View.TOOL.NONE);
 
             System.out.println("Client connected to WeePlantRobot");
             while(true) {

@@ -23,27 +23,39 @@ class UR_SIM():
 
         self.positions = {
             "home": [90, 90, 90, 120,0],
-            "pot 1":[156, 79, 128, 90,0],
+            "pot 1":[156, 79, 128, 150,0],
             "pot 2":[156, 79, 128, 120,0],
-            "pot 3":[156, 79, 128, 150,0],
-            "watering tool":[169, 95, 128, -90, 0],
+            "pot 3":[156, 79, 128, 90,0],
+            "pot foto 1":[135, 138, 90, 150,0],
+            "pot foto 2":[135, 138, 90, 120,0],
+            "pot foto 3":[135, 138, 90, 90,0],
+            
+
+            "watering tool before":[145, 95, 128, -90, 0],
             "watering tool grab":[169, 95, 128, -90, 1],
             "watering tool release":[169, 95, 128, -90,3],
-            "ground tool":[169, 95, 128, -20,0],
-            "ground tool grab":[169, 95, 128, -20,2],
-            "ground tool release":[169, 95, 128, -20,3],
-            "second position" : [0,90,0,90,0]
+          
+            "humidity tool before":[145, 95, 128, -20,0],
+            "humidity tool grab":[169, 95, 128, -20,2],
+            "humidity tool release":[169, 95, 128, -20,3],
+          
+            "second position" : [0,90,0,90,0],
+
+            "read QR":[137, 132, 48, 34, 0]
         }
 
     def getAddress(self):
         return self.address
 
-    def move(self,position_name,speed,interpolationSteps):
+    def disconnect(self):
+        self.s.close()
+
+    def move(self,position_name,speed = 40, interpolationSteps = 30):
         trama = str(speed) + "." + str(interpolationSteps) + "."
 
         for e in self.positions[position_name]:
             trama += str(e) + "."
-
+            
         #Ara una mica de Magia negra...
         trama = "\n".join(trama.rsplit(".", 1))
         
@@ -58,11 +70,25 @@ class UR_SIM():
             print("Bad input in sim robot.")
             return
         self.s.sendall(("#"+str(potNumber) +"\n").encode('ascii'))
+    def removeAllPots(self):
+        self.s.sendall(("#0\n").encode('ascii'))
 """
 if __name__ == "__main__":
     sim = UR_SIM("localhost", 25852)
+    sim.addPot(1)
+    sim.addPot(2)
+    sim.addPot(3)
+    sim.move("home")
+    sim.move("pot foto 1")
+
+    sim.move("home")
+    sim.move("pot foto 2")
+
+    sim.move("home")
+    sim.move("pot foto 3")
+
     sim.move("home",20,50)
-    sim.move("ground tool",20,50)
-    sim.move("ground tool grab",20,50)
+    sim.move("humidity tool",20,50)
+    sim.move("humidity tool grab",20,50)
     sim.move("home",20,50)
-""" 
+"""

@@ -35,6 +35,7 @@ class WeePlantDB():
     def __init__(self):
         #Create a connection to the database with our credentials.
         self.conn = pg.connect(dbname=SQL_DATABASE, user=SQL_USERNAME, password=SQL_PASSWORD, host=SQL_HOST, port=SQL_PORT, sslmode="prefer")
+        print("Connected to Postgre")
 
     #Funció per a aliberar els recursos i tancar la connexió amb la DB
     def closeDB(self):
@@ -285,13 +286,15 @@ class WeePlantDB():
 
     def getActualPlants(self):
         cursor = self.conn.cursor()
-        cursor.execute("""SELECT plant_ID FROM plant WHERE (pot_number >= 1 and pot_number <= 3);""")
+        cursor.execute("""SELECT plant_ID, pot_number FROM plant WHERE (pot_number >= 1 and pot_number <= 3);""")
 
         resultat = []
+        pots = []
         for row in cursor:
             resultat.append(int(row[0]))
+            pots.append(row[1])
 
-        return resultat
+        return (pots,resultat)
 
     # Funció que afegeix una planta a la base de dades i retorna el ID que se li assigna per defecte
     def addPlant(self, name, pot_number, since, watering_time, moisture_threshold, moisture_period, photo_period):
@@ -479,13 +482,12 @@ class WeePlantDB():
 
 
 def restartAllAndAddTestData():
+    print("Restarting Wee DB")
     db = WeePlantDB()
     db.resetTables()
     #db.addTestData2()
 
 restartAllAndAddTestData()
-
-
 
 
 #db.printTable("imatge")

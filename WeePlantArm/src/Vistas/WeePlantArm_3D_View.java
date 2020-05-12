@@ -21,9 +21,13 @@ public class WeePlantArm_3D_View extends PApplet{
 
     private static TOOL toolSelected;
     private static float zoom;
-    private static boolean []showPot = {true,true,true};//{false ,false, false};
+    private static boolean []showPot = {false ,false, false};
 
     public static void addPot(int potToAdd) {
+        if(potToAdd == 0){
+            showPot = new boolean[]{false, false, false};
+            return;
+        }
         showPot[potToAdd - 1] = true;
     }
 
