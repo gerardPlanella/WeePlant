@@ -24,7 +24,7 @@ from sim_robot import UR_SIM
 
 MODE_ESP32 = False
 MODE_UR_SIM = True
-USE_LOCALHOST = True
+USE_LOCALHOST = False
 
 PUMP_TIME = 1
 
@@ -498,7 +498,7 @@ def add_plant(qr_ss):
 
     if MODE_UR_SIM:
         ur_sim.addPot(working_pot)
-
+    UR_home()
 
 def UR_home():
     global MODE_UR_SIM,ur_sim
@@ -507,6 +507,9 @@ def UR_home():
     if MODE_UR_SIM:
         ur_sim.move("home")
 
+def smartWaitPrint(nextMeasure):
+    if (nextMeasure["type"] in "humidity"): print("Waiting " + str(nextMeasure["time"]) + " s to check the humidity levels in plant " + str(nextMeasure["pot_number"]))
+    elif (nextMeasure["type"] in "image"): print("Waiting " + str(nextMeasure["time"]) + " s to take a photo of plant " + str(nextMeasure["pot_number"]))
 
 def main():
     global running
@@ -528,22 +531,25 @@ def main():
 
         lastMeasureInfo = requestTimestamps(db, plantsInfo)
 
-        #print(plantsInfo)
-        #print(lastMeasureInfo)
-
         nextMeasure = getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo)
 
+        if notifyWebToUpdate and nextMeasure["time"] > 0:
+            print("****REQUESTING WEBPAGE REFRESH****")
+            sio.emit("REFRESH", working_pot)
+            notifyWebToUpdate = False
         
         if (nextMeasure["time"] > 0):   
-            print("Waiting until: " + str(nextMeasure))
+            smartWaitPrint(nextMeasure)
+
             time.sleep(nextMeasure["time"])
-    
+
         takePhotoMutex.acquire()
         
         if (nextMeasure["type"] in "humidity"): doMeasure(nextMeasure["plant"],nextMeasure["pot_number"], plantsInfo)
         elif (nextMeasure["type"] in "image"): takePicture(nextMeasure["plant"],nextMeasure["pot_number"])
 
-        if notifyWebToUpdate:
+        if notifyWebToUpdate and nextMeasure["time"] > 0:
+            print("****REQUESTING WEBPAGE REFRESH****")
             sio.emit("REFRESH", working_pot)
             notifyWebToUpdate = False
 
