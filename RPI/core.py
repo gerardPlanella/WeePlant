@@ -22,7 +22,7 @@ from sim_robot import UR_SIM
 
 #************************************************************CONFIGURABLE STUFF************************************************************
 
-MODE_ESP32 = False
+MODE_ESP32 = True
 MODE_UR_SIM = True
 USE_LOCALHOST = False
 
@@ -34,8 +34,8 @@ DEFAULT_PATH_IMAGE_NOESP32 = "fakeImages/1.jpg"
 UR_SIM_IP = "25.120.137.245"
 UR_SIM_PORT = 25852
 
-ESP32_IP = "192.168.1.36"
-ESP32_PORT = 8002
+ESP32_IP = "25.120.131.106"
+ESP32_PORT = 8017
 
 TOOL_ATTEMPTS = 5
 
@@ -82,23 +82,23 @@ DEFAULT_QR = [WEB_HOST + "/?name=Coolantus&watering_time=10&moisture_threshold=.
 
 
 def signal_handler(sig, frame):
-    global ur_sim, esp, sio 
-    
+    global ur_sim, esp, sio
+
     print('Goodbye!')
 
     if ur_sim is not None:
         ur_sim.disconnect()
-        
+
     if esp is not None:
         esp.disconnect()
     if sio is not None:
         sio.disconnect()
-    
+
     if takePhotoMutex.locked():
         takePhotoMutex.release()
 
     sys.exit(0)
-    
+
 """
 Not implemented.
 @sio.on('[CHANGE_CONFIG]')
@@ -112,17 +112,17 @@ def on_message(data):
 def on_message(data):
     global working_pot
 
-    takePhotoMutex.acquire()    
+    takePhotoMutex.acquire()
     working_pot = int(data[0])
     add_plant(data[1])
     takePhotoMutex.release()
 
-    
+
 @sio.on('[ABORT_PLANT]')
 def on_messasge(data):
     global abort_plant
-    print("QR reading aborted. Please type a key to continue.")
-
+    if (not MODE_ESP32): print("QR reading aborted. Please type a key to continue.")
+    ur_sim.move("home")
     abort_plant = True
 
 @sio.on('[ADD_PLANT]')
@@ -183,7 +183,7 @@ def requestTimings(db):
             ur_sim.addPot(pot)
 
     ret = []
-    
+
     for plant in plants:
         ret.append(db.getPlant(plant))
 
@@ -229,7 +229,7 @@ def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
                 pmin = aux
                 ptype = "image"
                 pot_number = measure["pot_number"]
-                
+
 
         else:
             if (pmin > tfnm):
@@ -237,14 +237,14 @@ def getTimeForEarliestMeasure(lastMeasureInfo, plantsInfo):
                 index = measure["id"]
                 ptype = "humidity"
                 pot_number = measure["pot_number"]
-                
+
 
             if (pmin > aux):
                 pmin = aux
                 index = measure["id"]
                 ptype = "image"
                 pot_number = measure["pot_number"]
-                
+
 
     #Time To Wait For Next Measure
     now = datetime.datetime.now()
@@ -265,13 +265,13 @@ def doMeasure(plant_id, pot_number, plantsInfo):
     global TOOL_ATTEMPTS, DEFAULT_HUMIDITY_NOESP32,MODE_ESP32, MODE_UR_SIM, notifyWebToUpdate, ur_sim,PUMP_TIME
     print("****DOING A MEASUREMENT****")
     print("UR going to humidity tool to check plant pot " + str(pot_number))
-    
+
     if MODE_UR_SIM:
         ur_sim.move("humidity tool before")
 
 
     print("UR going to attach humidity tool")
-    
+
     if MODE_UR_SIM:
         ur_sim.move("humidity tool grab")
 
@@ -283,16 +283,16 @@ def doMeasure(plant_id, pot_number, plantsInfo):
     while (value == 0):
         if attempts == 0:
             UR_home()
-    
-            
+
+
             print("ERROR: Unable to connect to the tool")
             return
 
         attempts -= 1
-        
+
         if MODE_UR_SIM:
             ur_sim.move("humidity tool before")
-        
+
         print("UR tries to connect again to the tool")
         if MODE_UR_SIM:
             ur_sim.move("humidity tool grab")
@@ -302,7 +302,7 @@ def doMeasure(plant_id, pot_number, plantsInfo):
 
 
     print("move UR from tool to plant pot " + str(pot_number))
-    
+
     if MODE_UR_SIM:
         ur_sim.move("home")
         ur_sim.move("pot " + str(pot_number))
@@ -311,10 +311,10 @@ def doMeasure(plant_id, pot_number, plantsInfo):
         ur_sim.move("home")
     else:
         print("Measuring humidity...")
-    
+
     if (MODE_ESP32): value = esp.getHumidity()
     else: value = DEFAULT_HUMIDITY_NOESP32
-    
+
 
     print("UR leaves the tool in its place")
     if MODE_UR_SIM:
@@ -333,8 +333,8 @@ def doMeasure(plant_id, pot_number, plantsInfo):
             break
 
     if (plantInfo["moisture_threshold"] < value):
-        
-        
+
+
         if MODE_UR_SIM:
             print("UR going to grab watering tool")
             ur_sim.move("watering tool before")
@@ -349,7 +349,8 @@ def doMeasure(plant_id, pot_number, plantsInfo):
             print("UR leaves the tool in its place")
             ur_sim.move("home")
             ur_sim.move("watering tool before")
-            ur_sim.move("watering tool release")        
+            ur_sim.move("watering tool release")
+            db.addWateringValue(datetime.datetime.now(), plant_id, value - plantInfo["moisture_threshold"])
             UR_home()
         else:
             print("UR to watering tool")
@@ -381,10 +382,10 @@ def getPlantData(path):
 
 def takePicture(plant_id, pot_number):
     global esp, MODE_ESP32, DEFAULT_PATH_IMAGE_NOESP32, notifyWebToUpdate
-    
+
     print("****TAKING A PHOTO****")
     print("UR going to plant " + str(pot_number))
-    
+
     if MODE_UR_SIM:
         ur_sim.move("pot foto " + str(pot_number))
         print("\tTaking a photo")
@@ -467,12 +468,12 @@ def add_plant(qr_ss):
             input("Enter a key to \"add a new qr\": \n")
             if abortPlantIfNecessary():
                 return
-            
-    
-    
+
+
+
     id = db.addPlant(np["name"], working_pot, np["since"], np["watering_time"], np["moisture_threshold"], np["moisture_period"], np["photo_period"])
     np['plant_ID'] = id
-    
+
     nm = {
         "id": id,
         "humidity": {
@@ -537,14 +538,14 @@ def main():
             print("****REQUESTING WEBPAGE REFRESH****")
             sio.emit("REFRESH", working_pot)
             notifyWebToUpdate = False
-        
-        if (nextMeasure["time"] > 0):   
+
+        if (nextMeasure["time"] > 0):
             smartWaitPrint(nextMeasure)
 
             time.sleep(nextMeasure["time"])
 
         takePhotoMutex.acquire()
-        
+
         if (nextMeasure["type"] in "humidity"): doMeasure(nextMeasure["plant"],nextMeasure["pot_number"], plantsInfo)
         elif (nextMeasure["type"] in "image"): takePicture(nextMeasure["plant"],nextMeasure["pot_number"])
 
@@ -554,7 +555,7 @@ def main():
             notifyWebToUpdate = False
 
         takePhotoMutex.release()
-        
+
         #print(nextMeasure)
         #print("\n" + "-"*80 + "\n")
         #sio.wait()
