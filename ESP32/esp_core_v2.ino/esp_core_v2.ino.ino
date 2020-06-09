@@ -63,8 +63,9 @@ const char* WiFiPassword = "ur_hack_la_salle";
 #endif
 
 
-const uint16_t port = 8014;
+const uint16_t port = 8018;
 const char * host = "192.168.1.36";
+//const char * host = "25.120.141.161";
 
 const float ADC_MULTIPLIER = 0.1875F; /* ADS1115  @ +/- 6.144V gain (16-bit results) */
 const float HUMIDITY_CONVERSION = 10.0F;
@@ -196,11 +197,11 @@ void loop() {
           humidity = adc2hum(volts);
           PRINT("("); PRINT(humidity); PRINTLN("%)");
           if (humidity <= 0) {
+            humidity = 0;
             PRINTLN("[ERROR] ADC Value");
-          } else {
-            if (sendHumidity(client, humidity) < 0) {
-              PRINTLN("[ERROR] Sending Humidity");
-            }
+          } 
+          if (sendHumidity(client, humidity) < 0) {
+            PRINTLN("[ERROR] Sending Humidity");
           }
           break;
 
@@ -279,6 +280,7 @@ int sendImage(WiFiClient client, camera_fb_t * fb) {
   int total_bytes = 0;
   int i = 0;
   int ok = 0;
+  int nWritten = 0;
 
 
   PRINT("Length to send: ");
@@ -286,25 +288,22 @@ int sendImage(WiFiClient client, camera_fb_t * fb) {
 
   do {
     client.print(fb->len);
-    while (client.available() <= 0) {
-      delay(100);
-      PRINTLN("Waiting for availability");
+    while (!client.available()) {
+      PRINTLN("Waiting for OK response");
     }
     ok = client.read();
-    for(i = 0; i < n_packets; i++){
-      if(i = n_packets - 1){
-        packet_length = fb->len % n_packets;
+    PRINTLN("OK 1");
+    while(total_bytes < fb->len){
+      if(fb->len - total_bytes < packet_length){
+        packet_length = fb->len - total_bytes;
       }
-      client.write(fb->buf + total_bytes, packet_length);
-      total_bytes += packet_length;
+      nWritten = client.write(fb->buf + total_bytes, packet_length);
+      total_bytes += nWritten;
+      PRINTLN("")
     }
-    
-    while (client.available() <= 0) {
-        delay(100);
-        PRINTLN("Waiting for availability");
-    }
-    ok = client.read();
   } while (ok == 0);
+
+  PRINTLN("Image sent");
 
 
   return 0;

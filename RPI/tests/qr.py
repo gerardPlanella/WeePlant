@@ -3,7 +3,7 @@ from pyzbar import pyzbar
 import cv2
 
 # load the input image
-image = cv2.imread("./test.jpeg")
+image = cv2.imread("qr.jpg")
 
 # find the barcodes in the image and decode each of the barcodes
 barcodes = pyzbar.decode(image)

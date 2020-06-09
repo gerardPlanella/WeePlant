@@ -63,7 +63,7 @@ const char* WiFiPassword = "ur_hack_la_salle";
 #endif
 
 
-const uint16_t port = 8018;
+const uint16_t port = 8020;
 const char * host = "192.168.1.36";
 
 const float ADC_MULTIPLIER = 0.1875F; /* ADS1115  @ +/- 6.144V gain (16-bit results) */
