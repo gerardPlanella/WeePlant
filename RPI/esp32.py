@@ -1,6 +1,5 @@
 # sudo pip3 install pyzbar
 # sudo apt-get install libzbar0
-
 ######################################################
 
 import socket
@@ -95,10 +94,7 @@ class ESP32():
             end = img_len
 
             self.conn.sendall(bytes([OK]))
-<<<<<<< HEAD
-=======
             #print("L'arroyo i el gerard me la mengen")
->>>>>>> 58d0fee61d84e76760f53fdfc8211a6ceb5d027b
 
             while start != end :
                 if int((end - start)/BURST_SIZE) > 0 :
@@ -167,53 +163,16 @@ class ESP32():
         return qr_list
 
 
-<<<<<<< HEAD
-class mysocket:
-    """demonstration class only
-      - coded for clarity, not efficiency
-    """
-
-    def __init__(self, sock=None):
-        if sock is None:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        else:
-            self.sock = sock
-
-    def connect(self, host, port):
-        self.sock.connect((host, port))
-
-    def mysend(self, msg):
-        totalsent = 0
-        while totalsent < MSGLEN:
-            sent = self.sock.send(msg[totalsent:])
-            if sent == 0:
-                raise RuntimeError("socket connection broken")
-            totalsent = totalsent + sent
-
-    def myreceive(self):
-        msg = b''
-        while len(msg) < MSGLEN:
-            chunk = self.sock.recv(MSGLEN-len(msg))
-            if chunk == b'':
-                raise RuntimeError("socket connection broken")
-            msg = msg + chunk
-        return msg
-
 """
-=======
->>>>>>> 58d0fee61d84e76760f53fdfc8211a6ceb5d027b
-
 if __name__ == "__main__":
 
     esp32 = ESP32(HOST, PORT)
     if esp32.connect() is True:
-        """
         qr_list = esp32.getQR()
 
         if len(qr_list) > 0:
             for qr in qr_list:
                 print(str(qr))
-        """
         i = 0
         
         while True :
@@ -225,4 +184,4 @@ if __name__ == "__main__":
         #print("Humidity " + humidity + "\n")
 
         esp32.disconnect()
-
+"""

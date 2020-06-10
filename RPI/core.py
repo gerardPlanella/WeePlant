@@ -436,11 +436,7 @@ def takePicture(plant_id, pot_number):
     # This is for the PlantCV Library
     info = getPlantData("images/" + str(plant_id) + "_(" + str(timee) + ").jpg")
 
-<<<<<<< HEAD
-    if (info["height"] != 0): db.addImage(timee, plant_id, open(path, 'rb').read(), info["height"], info["colour"])
-=======
     db.addImage(timee, plant_id, open(path, 'rb').read(), heightFunction(pictureNumber), colour)
->>>>>>> 58d0fee61d84e76760f53fdfc8211a6ceb5d027b
     #sio.emit("REFRESH", working_pot)
     notifyWebToUpdate = True
 
