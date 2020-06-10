@@ -28,8 +28,8 @@ QR_TMP = "./tmp/qr_tmp.jpeg"
 
 qr_count = 0
 
-HOST = '25.120.141.161'
-PORT = 8017
+HOST = '192.168.1.36'
+PORT = 8018
 
 class ESP32():
     __slots__ = ('sock', 'conn', 'addr', 'port', 'connected')
@@ -95,6 +95,10 @@ class ESP32():
             end = img_len
 
             self.conn.sendall(bytes([OK]))
+<<<<<<< HEAD
+=======
+            #print("L'arroyo i el gerard me la mengen")
+>>>>>>> 58d0fee61d84e76760f53fdfc8211a6ceb5d027b
 
             while start != end :
                 if int((end - start)/BURST_SIZE) > 0 :
@@ -163,6 +167,7 @@ class ESP32():
         return qr_list
 
 
+<<<<<<< HEAD
 class mysocket:
     """demonstration class only
       - coded for clarity, not efficiency
@@ -195,22 +200,29 @@ class mysocket:
         return msg
 
 """
+=======
+>>>>>>> 58d0fee61d84e76760f53fdfc8211a6ceb5d027b
 
 if __name__ == "__main__":
 
     esp32 = ESP32(HOST, PORT)
     if esp32.connect() is True:
+        """
         qr_list = esp32.getQR()
 
         if len(qr_list) > 0:
             for qr in qr_list:
                 print(str(qr))
-
-        esp32.getImage("test.jpeg")
-
+        """
+        i = 0
+        
+        while True :
+            esp32.getImage("test" + str(i) + ".jpeg")
+            i = i + 1
+        
         #humidity = esp32.getHumidity();
 
         #print("Humidity " + humidity + "\n")
 
         esp32.disconnect()
-"""
+
