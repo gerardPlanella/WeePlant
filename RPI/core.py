@@ -18,7 +18,7 @@ from threading import Lock
 import plant
 from sim_robot import UR_SIM
 
-
+#TODO:AL FER WAITING, NO TORNA A HOME!!!!
 
 #************************************************************CONFIGURABLE STUFF************************************************************
 
@@ -28,7 +28,7 @@ USE_LOCALHOST = False
 
 PUMP_TIME = 1
 
-DEFAULT_HUMIDITY_NOESP32 = 0.5
+DEFAULT_HUMIDITY_NOESP32 = 0.1
 DEFAULT_PATH_IMAGE_NOESP32 = "fakeImages/1.jpg"
 
 UR_SIM_IP = "25.120.137.245"
@@ -54,6 +54,8 @@ working_pot = -1
 
 sio = socketio.Client()
 db = database.WeePlantDB()
+
+pictureNumber = 0
 
 takePhotoMutex = Lock()
 if MODE_UR_SIM:
@@ -379,8 +381,11 @@ def getPlantData(path):
         ret["colour"] = [plant.getColourHistogram()[0]["value"], plant.getColourHistogram()[1]["value"], plant.getColourHistogram()[2]["value"]]
     return ret
 
+def heightFunction(pictureNumber):
+    return pictureNumber * 0.5
+
 def takePicture(plant_id, pot_number):
-    global esp, MODE_ESP32, DEFAULT_PATH_IMAGE_NOESP32, notifyWebToUpdate
+    global esp, MODE_ESP32, DEFAULT_PATH_IMAGE_NOESP32, notifyWebToUpdate, pictureNumber
     
     print("****TAKING A PHOTO****")
     print("UR going to plant " + str(pot_number))
@@ -413,12 +418,14 @@ def takePicture(plant_id, pot_number):
     # This is for the PlantCV Library
     #info = getPlantData("images/" + str(plant_id) + "_(" + str(timee) + ").jpg")
 
-    db.addImage(timee, plant_id, open(path, 'rb').read(), 70, colour)
+    db.addImage(timee, plant_id, open(path, 'rb').read(), heightFunction(pictureNumber), colour)
     #sio.emit("REFRESH", working_pot)
     notifyWebToUpdate = True
 
     if MODE_UR_SIM:
         ur_sim.move("home")
+        
+    pictureNumber = pictureNumber + 1
     print("****END OF TAKING A PHOTO****")
     #db.addImage(timee, plant_id, open("images/" + str(plant_id) + "_(" + str(timee) + ").jpg").read(), info["height"], info["colour"])
     return
