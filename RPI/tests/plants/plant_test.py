@@ -20,21 +20,21 @@ class Plant():
         self.result_path = result_path
         self.data_ready = False
         self.write_result = write_result
-        
+
     def setWriteResult(self, write_result):
         self.write_result = write_result
-    
+
     def setImagePath(self, image_path):
         self.image_path = image_path
-    
+
     def setWriteImageOutput(self, write_image):
         self.write_image = write_image
-    
+
     def setResultPath(self, result_path):
         self.result_path = result_path
 
-    
-    
+
+
     def calculate(self):
         pcv.params.debug = self.debug
         pcv.params.debug_outdir = self.output_dir
@@ -45,7 +45,7 @@ class Plant():
         roi_x = int(width * ROI_X)
         roi_y = int(height * ROI_Y )
 
-        
+
 
         # Convert RGB to HSV and extract the saturation channel
         s = pcv.rgb2gray_hsv(rgb_img=img, channel='s')
@@ -99,9 +99,9 @@ class Plant():
         roi1, roi_hierarchy= pcv.roi.rectangle(img=masked2, x=roi_x, y=roi_y, h=int((height * (1-ROI_Y))), w=int((width * (1-ROI_X))))
 
         # Decide which objects to keep
-        roi_objects, hierarchy3, kept_mask, obj_area = pcv.roi_objects(img=img, roi_contour=roi1, 
-                                                                roi_hierarchy=roi_hierarchy, 
-                                                                object_contour=id_objects, 
+        roi_objects, hierarchy3, kept_mask, obj_area = pcv.roi_objects(img=img, roi_contour=roi1,
+                                                                roi_hierarchy=roi_hierarchy,
+                                                                object_contour=id_objects,
                                                                 obj_hierarchy=obj_hierarchy,
                                                                 roi_type='partial')
 
@@ -126,7 +126,7 @@ class Plant():
 
             # Determine color properties: Histograms, Color Slices, output color analyzed histogram (optional)
             color_histogram = pcv.analyze_color(rgb_img=img, mask=kept_mask, hist_plot_type="rgb")
-            
+
             # Pseudocolor the grayscale image
             pseudocolored_img = pcv.visualize.pseudocolor(gray_img=s, mask=kept_mask, cmap="jet")
 
@@ -135,40 +135,40 @@ class Plant():
 
             with open(self.result_path) as f:
                 self.data = json.load(f)
-                if not self.write_result: 
+                if not self.write_result:
                     os.remove(self.result_path)
                 self.data_ready = True
         else:
             self.data_ready = False
             print("No plant has been found")
-            
-        
+
+
     def getHeight(self):
         if self.data_ready:
             return self.data["observations"]["height"]["value"]
-        else: 
+        else:
             return False
     def getWidth(self):
         if self.data_ready:
             return self.data["observations"]["width"]["value"]
-        else: 
+        else:
             return False
 
     def isFramed(self):
         if self.data_ready:
             return self.data["observations"]["object_in_frame"]["value"]
         return False
-    
+
     def getColourHistogram(self):
         if self.data_ready :
             return (self.data["observations"]["red_frequencies"], self.data["observations"]["green_frequencies"], self.data["observations"]["blue_frequencies"])
         return (False, False, False)
-    
-      
+
+
 if __name__ == '__main__':
 
-    plant = Plant(image_path="test4.png", write_image_output=True,result_path= "./temp/plant_info.json", write_result=True)
-    
+    plant = Plant(image_path="test_tronco.jpg", write_image_output=True,result_path= "./temp/plant_info.json", write_result=True)
+
     plant.calculate()
 
     if True:
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         if (height is not False) and (width is not False) :
             print("Plant Height: " + str(height) + " pix\n")
             print("Plant Width: " + str(width) + " pix\n")
-        
+
         (red, green, blue) = plant.getColourHistogram()
 
         if (red != green) and (green != blue) and (blue != False) :
@@ -192,7 +192,7 @@ if __name__ == '__main__':
             print("-------- BLUE --------\n\n")
             print(json.dumps(blue, indent=4, sort_keys=True) + "\n")
             """
-        
+
         """
             #e.g: to get the y axis of the colour red:
             red_values = red["value"]
@@ -213,7 +213,3 @@ if __name__ == '__main__':
       """
     else:
         print("Plant Not Framed!")
-
-
-
-

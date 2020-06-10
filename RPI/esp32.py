@@ -73,14 +73,14 @@ class ESP32():
 
     def getHumidity(self):
         humidity = 0.5
-        """
+
         if self.connected is True:
             self.conn.sendall(bytes([HUMIDITY]))
             humidity = float(self.conn.recv(1024))
             if DEBUG: print("Humidity Received " + str(humidity) + "%\n")
             self.conn.sendall(bytes([OK]))
             if DEBUG: print("OK sent\n")
-        """
+        
         return humidity
 
     def grabImage(self):
@@ -94,26 +94,21 @@ class ESP32():
             if DEBUG: print("Img Length " + str(img_len) + "\n")
             end = img_len
 
-            self.conn.send(bytes([OK]))
-            #print("L'arroyo i el gerard me la mengen")
+            self.conn.sendall(bytes([OK]))
 
             while start != end :
                 if int((end - start)/BURST_SIZE) > 0 :
-                    print("before")
                     bytes_read = self.conn.recv(BURST_SIZE)
-                    print("after")
                 else:
-                    print("b")
                     bytes_read = self.conn.recv((end - start)%BURST_SIZE)
-                    print("a")
 
                 start += len(bytes_read)
                 img_bytes += bytes_read
                 if DEBUG: print("Packet Read: " + str(start) + "/" + str(end) + "\n")
 
-            if DEBUG: print("Image Read \n")
-            self.conn.send(bytes([OK]))
-            if DEBUG: print("OK sent\n")
+            #if DEBUG: print("Image Read \n")
+            #self.conn.sendall(bytes([OK]))
+            #if DEBUG: print("OK sent\n")
 
             image_stream = BytesIO(img_bytes)
             image = Image.open(image_stream).convert("RGB")
@@ -167,6 +162,37 @@ class ESP32():
 
         return qr_list
 
+
+class mysocket:
+    """demonstration class only
+      - coded for clarity, not efficiency
+    """
+
+    def __init__(self, sock=None):
+        if sock is None:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        else:
+            self.sock = sock
+
+    def connect(self, host, port):
+        self.sock.connect((host, port))
+
+    def mysend(self, msg):
+        totalsent = 0
+        while totalsent < MSGLEN:
+            sent = self.sock.send(msg[totalsent:])
+            if sent == 0:
+                raise RuntimeError("socket connection broken")
+            totalsent = totalsent + sent
+
+    def myreceive(self):
+        msg = b''
+        while len(msg) < MSGLEN:
+            chunk = self.sock.recv(MSGLEN-len(msg))
+            if chunk == b'':
+                raise RuntimeError("socket connection broken")
+            msg = msg + chunk
+        return msg
 
 """
 

@@ -487,7 +487,7 @@ def restartAllAndAddTestData():
     db.resetTables()
     #db.addTestData2()
 
-restartAllAndAddTestData()
+#restartAllAndAddTestData()
 
 
 #db.printTable("imatge")

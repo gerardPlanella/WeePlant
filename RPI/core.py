@@ -15,7 +15,7 @@ import sys
 
 from threading import Lock
 
-import plant
+import plant as plantcvlib
 from sim_robot import UR_SIM
 
 
@@ -65,7 +65,9 @@ else:
 if (MODE_ESP32):
     esp = esp32.ESP32(ESP32_IP, ESP32_PORT)
     if(not esp.connect()):
+        # TODO: Fer aixo beee
         print("Connection with esp32 failed")
+        running = False
     else:
         print("Connection with esp32 established")
 else:
@@ -332,7 +334,7 @@ def doMeasure(plant_id, pot_number, plantsInfo):
             plantInfo = plant
             break
 
-    if (plantInfo["moisture_threshold"] < value):
+    if (plantInfo["moisture_threshold"] * 100 > value):
 
 
         if MODE_UR_SIM:
@@ -350,7 +352,7 @@ def doMeasure(plant_id, pot_number, plantsInfo):
             ur_sim.move("home")
             ur_sim.move("watering tool before")
             ur_sim.move("watering tool release")
-            db.addWateringValue(datetime.datetime.now(), plant_id, value - plantInfo["moisture_threshold"])
+            db.addWateringValue(datetime.datetime.now(), plant_id, plantInfo["moisture_threshold"] * 100 - value)
             UR_home()
         else:
             print("UR to watering tool")
@@ -363,10 +365,24 @@ def doMeasure(plant_id, pot_number, plantsInfo):
     return True
 
 def getPlantData(path):
-    plant = Plant(image_path=path, write_image_output=True, result_path= "./out_plant_debugg/plant_2_info.json", write_result=True)
+    plant = plantcvlib.Plant(image_path=path, write_image_output=True, result_path= "./out_plant_debugg/plant_2_info.json", write_result=True)
     plant.calculate()
 
-    ret = {"height": 0, "colour": 0}
+    color1 = []
+    color2 = []
+    color3 = []
+    for j in range (3):
+        color1.append([])
+        color2.append([])
+        color3.append([])
+        for i in range(255):
+            color1[j].append(i % 255)
+            color2[j].append((255 - i) % 255)
+            color3[j].append(int((255*(i+.1)**(-1))%255))
+
+    colour = [color1, color2, color3]
+
+    ret = {"height": 0, "colour": colour}
 
     if plant.isFramed() is True:
         height = plant.getHeight()
@@ -377,7 +393,8 @@ def getPlantData(path):
         else:
             ret["height"] = height
 
-        ret["colour"] = [plant.getColourHistogram()[0]["value"], plant.getColourHistogram()[1]["value"], plant.getColourHistogram()[2]["value"]]
+        (red, green, blue) = plant.getColourHistogram()
+        ret["colour"] = [red["value"], green["value"], blue["value"]]
     return ret
 
 def takePicture(plant_id, pot_number):
@@ -412,9 +429,9 @@ def takePicture(plant_id, pot_number):
     if (MODE_ESP32): esp.getImage(path)
 
     # This is for the PlantCV Library
-    #info = getPlantData("images/" + str(plant_id) + "_(" + str(timee) + ").jpg")
+    info = getPlantData("images/" + str(plant_id) + "_(" + str(timee) + ").jpg")
 
-    db.addImage(timee, plant_id, open(path, 'rb').read(), 70, colour)
+    if (info["height"] != 0): db.addImage(timee, plant_id, open(path, 'rb').read(), info["height"], info["colour"])
     #sio.emit("REFRESH", working_pot)
     notifyWebToUpdate = True
 
@@ -564,10 +581,11 @@ def main():
 
 if __name__ == '__main__':
 
-    sio.connect(WEB_HOST)
-    signal.signal(signal.SIGINT, signal_handler)
-    print("We Alive!")
+    if (running):
+        sio.connect(WEB_HOST)
+        signal.signal(signal.SIGINT, signal_handler)
+        print("We Alive!")
 
-    main()
+        main()
 
-    sio.wait()
+        sio.wait()
