@@ -167,7 +167,7 @@ class Plant():
       
 if __name__ == '__main__':
 
-    plant = Plant(image_path="test4.png", write_image_output=True,result_path= "./temp/plant_info.json", write_result=True)
+    plant = Plant(image_path="plant_vid_3.jpg", write_image_output=True,result_path= "./temp/plant_info.json", write_result=True)
     
     plant.calculate()
 
