@@ -13,27 +13,29 @@ import esp32
 import signal
 import sys
 
+import numpy as np
+
 from threading import Lock
 
 import plant as plantcvlib
 from sim_robot import UR_SIM
 
-#TODO:AL FER WAITING, NO TORNA A HOME!!!!
+#TODO: AL FER WAITING, NO TORNA A HOME!!!!
 
 #************************************************************CONFIGURABLE STUFF************************************************************
 
-MODE_ESP32 = True
+MODE_ESP32 = False
 MODE_UR_SIM = True
 USE_LOCALHOST = False
 
 PUMP_TIME = 1
 
 DEFAULT_HUMIDITY_NOESP32 = 0.1
-DEFAULT_PATH_IMAGE_NOESP32 = "fakeImages/1.jpg"
+DEFAULT_PATH_IMAGE_NOESP32 = "fakeImages/"#/weeplant_pres_22.jpg"
 
 UR_SIM_IP = "25.120.137.245"
 UR_SIM_PORT = 25852
-ESP32_IP = "192.168.1.36"
+#ESP32_IP = "192.168.1.36"
 #ESP32_IP = "25.120.131.106"
 ESP32_PORT = 8016
 
@@ -56,6 +58,7 @@ sio = socketio.Client()
 db = database.WeePlantDB()
 
 pictureNumber = 0
+fake_image_number = 0
 
 takePhotoMutex = Lock()
 if MODE_UR_SIM:
@@ -354,7 +357,7 @@ def doMeasure(plant_id, pot_number, plantsInfo):
             ur_sim.move("home")
             ur_sim.move("watering tool before")
             ur_sim.move("watering tool release")
-            db.addWateringValue(datetime.datetime.now(), plant_id, plantInfo["moisture_threshold"] * 100 - value)
+            db.addWateringValue(datetime.datetime.now(), plant_id, (float)(plantInfo["moisture_threshold"] * 100) - value)
             UR_home()
         else:
             print("UR to watering tool")
@@ -400,10 +403,10 @@ def getPlantData(path):
     return ret
 
 def heightFunction(pictureNumber):
-    return pictureNumber * 0.5
+    return 52#1.0 / (1.0 + np.exp(-pictureNumber)) 
 
 def takePicture(plant_id, pot_number):
-    global esp, MODE_ESP32, DEFAULT_PATH_IMAGE_NOESP32, notifyWebToUpdate, pictureNumber
+    global esp, MODE_ESP32, DEFAULT_PATH_IMAGE_NOESP32, notifyWebToUpdate, pictureNumber,fake_image_number
     
     print("****TAKING A PHOTO****")
     print("UR going to plant " + str(pot_number))
@@ -428,13 +431,19 @@ def takePicture(plant_id, pot_number):
     colour = [color1, color2, color3]
     timee = datetime.datetime.now()
 
-    if (MODE_ESP32): path = "images/" + str(plant_id) + "_(" + str(timee) + ").jpg"
-    else: path = DEFAULT_PATH_IMAGE_NOESP32
+    if (MODE_ESP32): 
+        path = "images/" + str(plant_id) + "_(" + str(timee) + ").jpg"
+    elif (plant_id == 2):
+        path = DEFAULT_PATH_IMAGE_NOESP32 + str(fake_image_number)+".jpg"
+        if (fake_image_number < 15):
+            fake_image_number = fake_image_number + 1
+    else:
+        path = "./fakeImages/weeplant_pres_22.jpg"
 
     if (MODE_ESP32): esp.getImage(path)
 
     # This is for the PlantCV Library
-    info = getPlantData("images/" + str(plant_id) + "_(" + str(timee) + ").jpg")
+    #info = getPlantData(path)
 
     db.addImage(timee, plant_id, open(path, 'rb').read(), heightFunction(pictureNumber), colour)
     #sio.emit("REFRESH", working_pot)
@@ -442,7 +451,7 @@ def takePicture(plant_id, pot_number):
 
     if MODE_UR_SIM:
         ur_sim.move("home")
-        
+    
     pictureNumber = pictureNumber + 1
     print("****END OF TAKING A PHOTO****")
     #db.addImage(timee, plant_id, open("images/" + str(plant_id) + "_(" + str(timee) + ").jpg").read(), info["height"], info["colour"])
@@ -501,14 +510,14 @@ def add_plant(qr_ss):
     nm = {
         "id": id,
         "humidity": {
-            "time": datetime.datetime.now() - datetime.timedelta(seconds=np["moisture_period"]),
+            "time": datetime.datetime.now(),
             "value": 0
             },
         "watering": {
-            "time": datetime.datetime.now() - datetime.timedelta(seconds=np["moisture_period"]),
+            "time": datetime.datetime.now(),
             "value": 0
             },
-        "image": datetime.datetime.now() - datetime.timedelta(seconds=np["photo_period"])
+        "image": datetime.datetime.now()
     }
 
     plantsInfo.append(np)
@@ -517,13 +526,20 @@ def add_plant(qr_ss):
     db.addWateringValue(nm["watering"]["time"], id, nm["watering"]["value"])
     db.addHumidityValue(nm["humidity"]["time"], id, nm["humidity"]["value"])
 
-    noplant = False
-
     sio.emit('QRReading',"")
 
     if MODE_UR_SIM:
         ur_sim.addPot(working_pot)
+
+    doMeasure(id,working_pot, plantsInfo)
+    takePicture(id, working_pot)
+
+    sio.emit("REFRESH", working_pot)
+    
     UR_home()
+
+    noplant = False
+
 
 def UR_home():
     global MODE_UR_SIM,ur_sim

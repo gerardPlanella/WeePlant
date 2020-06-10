@@ -487,18 +487,14 @@ def restartAllAndAddTestData():
     db.resetTables()
     #db.addTestData2()
 
-#restartAllAndAddTestData()
+restartAllAndAddTestData()
 
 
 #db.printTable("imatge")
 
 #print(db.getHumidityLog(2))
 
-#
-#
 #print(db.getImages(1))
 #print(db.getPlant(1))
 #db.printTable('humidity')
 #db.closeDB()
-
-#
